@@ -38,15 +38,12 @@ unset($output);
 //TODO: check return
 
 $asound_number = 0;
-$path = posix_getpwuid(posix_getuid())['dir'];
-if (file_exists($path."/.asoundrc"))
+exec("sudo bash -c \"sed -n '/card/s/.*card.\([0-9]*\)/\\1/p' ~/.asoundrc\"", $output, $return_val);
+if ( $return_val == 0 )
 {
-	exec("sed -n '/card/s/.*card.\([0-9]*\)/\\1/p' ~/.asoundrc", $output, $return_val);
 	$asound_number = $output[0];
-	error_log("as: $asound_number");
-	unset($output);
-	//TODO: check return
 }
+unset($output);
 
 ?>
 
