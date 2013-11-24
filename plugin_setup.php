@@ -84,15 +84,21 @@ make sure the file extension isn't ".txt")
 
 ##### EDIT HERE #####
 
+FREQUENCY=87.9
+
 ARTIST="Artist Name"
-SONG="Song Title"
+TITLE="Song Title"
 
 # Station cannot be more than 8 characters
 STATION="VAST"
 
 ##### DO NOT EDIT PAST THIS #####
 
-/opt/fpp/plugins/vastfmt/bin/rds --artist "$ARTIST" --song "$SONG" --station "$STATION"
+sudo /opt/fpp/plugins/vastfmt/bin/rds -vvvvv -t \
+     -f $FREQUENCY \
+     --artist "$ARTIST" \
+     --title "$TITLE" \
+     --rds-station "$STATION" \ &> /home/pi/media/logs/vastfmt_rds.log
 </pre>
 
 </fieldset>
