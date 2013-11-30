@@ -38,7 +38,7 @@ unset($output);
 //TODO: check return
 
 $asound_number = 0;
-exec("sudo bash -c \"sed -n '/card/s/.*card.\([0-9]*\)/\\1/p' ~/.asoundrc\"", $output, $return_val);
+exec("sudo sed -n '/defaults.pcm.card/s/defaults.pcm.card.\([0-9]*\)/\\1/p' /usr/share/alsa/alsa.conf", $output, $return_val);
 if ( $return_val == 0 )
 {
 	$asound_number = $output[0];
