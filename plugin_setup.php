@@ -94,11 +94,13 @@ STATION="VAST"
 
 ##### DO NOT EDIT PAST THIS #####
 
+exec >> /home/pi/media/logs/vastfmt_rds.log 2>&1
+
 sudo /opt/fpp/plugins/vastfmt/bin/rds -vvvvv -t \
      -f $FREQUENCY \
      --artist "$ARTIST" \
      --title "$TITLE" \
-     --rds-station "$STATION" \ &> /home/pi/media/logs/vastfmt_rds.log
+     --rds-station "$STATION"
 </pre>
 
 </fieldset>
