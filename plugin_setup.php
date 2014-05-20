@@ -1,4 +1,3 @@
-
 <script language="Javascript">
 
 function ToggleFmTransmitter() {
@@ -69,39 +68,17 @@ Vast Electronics V-FMT212R: <?php echo ( $fm_audio ? "<span class='good'>Detecte
 <fieldset>
 <legend>RDS Support Instructions</legend>
 
-<ol>
-<li>Copy/paste the sample script into your favorite text editor.</li>
-<li>Edit the artist/song/station information near the top</li>
-<li>Save it as something you'll remember with a ".sh" extension.</li>
-(If you're using Windows/Notepad, you may need to look up how to
-make sure the file extension isn't ".txt")
+<p>Name your media file in the following format:
+<br />
+&lt;Artist Name&gt; - &lt;Song Title&gt;.ogg</p>
 
-<li>Upload to the "Scripts" tab on the <a href="uploadfile.php" target="_blank">upload page</a>.</li>
-</ol>
+<p>The rest will happen auto-magically.</p>
 
-<pre>
-#!/bin/sh
+<p>If the filename isn't parsed appropriately for artist and song title, the
+filename will simply be passed as RT text instead of utilizing RT+.</p>
 
-##### EDIT HERE #####
-
-FREQUENCY=87.9
-
-ARTIST="Artist Name"
-TITLE="Song Title"
-
-# Station cannot be more than 8 characters
-STATION="VAST"
-
-##### DO NOT EDIT PAST THIS #####
-
-exec >> /home/pi/media/logs/vastfmt_rds.log 2>&1
-
-sudo /opt/fpp/plugins/vastfmt/bin/rds -vvvvv -t \
-     -f $FREQUENCY \
-     --artist "$ARTIST" \
-     --title "$TITLE" \
-     --rds-station "$STATION"
-</pre>
+<p>To report a bug, please file it against the fpp-vastfmt plugin project here:
+<a href="https://github.com/Materdaddy/fpp-vastfmt/issues/new" target="_new">fpp-vastfmt GitHub Issues</a></p>
 
 </fieldset>
 </div>
