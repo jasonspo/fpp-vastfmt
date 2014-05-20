@@ -74,7 +74,7 @@ handle_media()
 
 	if [ -n "$artist" ] && [ -n "$title" ]; then
 		vast_args="$vast_args --artist \"$artist\" --title \"$title\""
-	else
+	elif [ -n "$Media" ]; then
 		vast_args="$vast_args --rds-text \"${Media%.ogg}\""
 	fi
 
