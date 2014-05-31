@@ -62,10 +62,7 @@ done
 
 handle_media()
 {
-	FREQUENCY=87.9
-	STATION=COQH
-
-	vast_args="$(dirname $0)/bin/rds -vvvvv -t -f $FREQUENCY --rds-station \"$STATION\""
+	vast_args="$(dirname $0)/bin/rds -t --rds"
 
 	eval $(echo $1 | sed 's/^{//;s/}$//;s/,\s*/\n/g;s/"\([^"]*\)"\:\s*"\([^"]*\)"/\1="\2"/g')
 
@@ -93,7 +90,12 @@ case $operation in
 			echo >> callback_debug.log
 		fi
 
-		eval $value
+		volume=$(amixer | grep 'Front Left:' | awk '{print $4}')
+		amixer set PCM -- 0 mute
+		sleep 1
+		eval $value &
+		sleep 2
+		amixer set PCM -- $volume unmute
 		;;
 	*)
 		die "You must specify a callback type!"
