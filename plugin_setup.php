@@ -44,6 +44,9 @@ href="https://github.com/Materdaddy/fpp-vastfmt/issues/1">Bug 1</a></li>
 a powered USB hub.  If this happens, a cold boot is required (completely
 remove power from the VAST/Pi) - <a target="_new"
 href="https://github.com/Materdaddy/fpp-vastfmt/issues/2">Bug 2</a></li>
+
+<li>Callback parsing variables incorrectly - <a target="_new"
+href="https://github.com/Materdaddy/fpp-vastfmt/issues/3">Bug 3</a></li>
 </ul>
 
 Planned Features:
