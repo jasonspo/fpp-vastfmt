@@ -1,9 +1,12 @@
 <?php
 
 exec("if cat /proc/asound/cards | sed -n '/\s[0-9]*\s\[/p' | grep -iq vast; then echo 1; else echo 0; fi", $output, $return_val);
+if ( $return_val )
+{
+	error_log("Failed our command to check for the FM transmitter");
+}
 $fm_audio = ($output[0] == 1);
 unset($output);
-//TODO: check return
 
 ?>
 
@@ -11,8 +14,12 @@ unset($output);
 <div id="usbaudio" class="settings">
 <fieldset>
 <legend>FM Transmitter Audio</legend>
-<br />
-Vast Electronics V-FMT212R: <?php echo ( $fm_audio ? "<span class='good'>Detected</span>" : "<span class='bad'>Not Detected</span>" ); ?>
+<p>Vast Electronics V-FMT212R: <?php echo ( $fm_audio ? "<span class='good'>Detected</span>" : "<span class='bad'>Not Detected</span>" ); ?></p>
+
+<?php if ( $fm_audio ): ?>
+<p>To configure FPP to use the FM transmitter for audio output, go to the <a href="/settings.php">settings page</a> and select "Transmitter" from the drop-down for "Audio Output Device".</p>
+<?php endif; ?>
+
 </fieldset>
 </div>
 
