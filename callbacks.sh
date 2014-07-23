@@ -90,12 +90,11 @@ case $operation in
 			echo >> callback_debug.log
 		fi
 
-		volume=$(amixer | tail -n 1 | cut -d: -f2 | awk '{print $2}')
-		amixer set PCM -- 0 mute
+		amixer set PCM -- mute
 		sleep 1
 		eval $value &
 		sleep 2
-		amixer set PCM -- $volume unmute
+		amixer set PCM -- unmute
 		;;
 	*)
 		die "You must specify a callback type!"
