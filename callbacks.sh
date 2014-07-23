@@ -90,7 +90,7 @@ case $operation in
 			echo >> callback_debug.log
 		fi
 
-		volume=$(amixer | grep 'Front Left:' | awk '{print $4}')
+		volume=$(amixer | tail -n 1 | cut -d: -f2 | awk '{print $2}')
 		amixer set PCM -- 0 mute
 		sleep 1
 		eval $value &
