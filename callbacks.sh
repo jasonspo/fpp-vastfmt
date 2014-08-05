@@ -71,8 +71,12 @@ handle_media()
 
 	eval $(echo $1 | sed 's/^{//;s/}$//;s/,\s*/\n/g;s/"\([^"]*\)"\:\s*"\([^"]*\)"/\1="\2"/g')
 
-	artist="$(echo $Media | sed -n '/-/p' | cut -d- -f1 | sed 's/^\s*//g;s/\s*$//g')"
-	title="$(echo $Media | sed -n '/-/p' | cut -d- -f2 | sed 's/^\s*//g;s/\s*\.ogg\s*$//g;')"
+	if [ -z "$artist" ]; then
+		artist="$(echo $Media | sed -n '/-/p' | cut -d- -f1 | sed 's/^\s*//g;s/\s*$//g')"
+	fi
+	if [ -z "$title" ]; then
+		title="$(echo $Media | sed -n '/-/p' | cut -d- -f2 | sed 's/^\s*//g;s/\s*\.ogg\s*$//g;')"
+	fi
 
 	if [ -n "$artist" ] && [ -n "$title" ]; then
 		vast_args="$vast_args --artist \"$artist\" --title \"$title\""
