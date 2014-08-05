@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #DEBUG=1
+LOGFILE=/home/pi/media/logs/rds.log
 
 die()
 {
@@ -14,6 +15,10 @@ usage()
 }
 
 OPTS=$(getopt -n $0 --options lt:d: --longoptions list,type:,data: -- "$@")
+
+if [ -n "$DEBUG" ]; then
+	echo "Full args: $*" >> $LOGFILE
+fi
 
 # Die if they fat finger arguments, this program will be run as root
 [ $? = 0 ] || die "Error parsing arguments. Try $PROGRAM_NAME --help"
@@ -85,9 +90,9 @@ case $operation in
 			echo $value
 
 			# Log to a file as well
-			date >> callback_debug.log
-			echo $value >> callback_debug.log
-			echo >> callback_debug.log
+			date >> $LOGFILE
+			echo $value >> $LOGFILE
+			echo >> $LOGFILE
 		fi
 
 		amixer set PCM -- mute
