@@ -11,13 +11,15 @@ unset($output);
 ?>
 
 
-<div id="usbaudio" class="settings">
+<div id="transmitterinfo" class="settings">
 <fieldset>
-<legend>FM Transmitter Audio</legend>
+<legend>Transmitter Information</legend>
 <p>Vast Electronics V-FMT212R: <?php echo ( $fm_audio ? "<span class='good'>Detected</span>" : "<span class='bad'>Not Detected</span>" ); ?></p>
 
 <?php if ( $fm_audio ): ?>
 <p>To configure FPP to use the FM transmitter for audio output, go to the <a href="/settings.php">settings page</a> and select "Transmitter" from the drop-down for "Audio Output Device".</p>
+<?php else: ?>
+<p>To use the VastFMT for audio output, please plug in device and reboot.</p>
 <?php endif; ?>
 
 </fieldset>
@@ -25,37 +27,93 @@ unset($output);
 
 <br />
 
-<div id="rds" class="settings">
+<div id="transmittersettings" class="settings">
 <fieldset>
-<legend>RDS Support Instructions</legend>
+<legend>Transmitter Settings</legend>
 
-<p>You must first set up your Vast V-FMT212R using the Vast Electronics
-software and save it to the EEPROM.  Once you have your VAST setup to transmit
-on your frequency when booted, you can plug it into the Raspberry Pi and
-reboot.  You will then go to the FPP Settings screen and select the Vast as
-your sound output instead of the Pi's built-in audio.</p>
+<script>
+function togglePower()
+{
+	if ($('#TurnOff').is(':checked'))
+	{
+		$('#Power').prop("disabled", false);
+		$('#savePower').prop("disabled", false);
+	}
+	else
+	{
+		$('#Power').prop("disabled", true);
+		$('#savePower').prop("disabled", true);
+	}
+}
+function toggleSettings()
+{
+	if ($('#SetFreq').is(':checked'))
+	{
+		$('#Frequency').prop("disabled", false);
+		$('#saveFrequency').prop("disabled", false);
+		$('#RdsType').prop("disabled", false);
+	}
+	else
+	{
+		$('#Frequency').prop("disabled", true);
+		$('#saveFrequency').prop("disabled", true);
+		$('#RdsType').prop("disabled", true);
+	}
+}
+function toggleStation()
+{
+	if ($('#RdsType').val() == "disabled")
+	{
+		$('#Station').prop("disabled", true);
+		$('#saveStation').prop("disabled", true);
+	}
+	else
+	{
+		$('#Station').prop("disabled", false);
+		$('#saveStation').prop("disabled", false);
+	}
+}
 
-<p>Tag your MP3s/OGG files appropriate.  The tags are used to set the Artist
-and Title fields for RDS's RT+ text. The rest will happen auto-magically!</p>
+$(function(){toggleSettings();toggleStation();togglePower();});
+</script>
+
+<p>Toggle transmitter with playlist: <?php PrintSettingCheckbox("Turn off", "TurnOff", "1", "0", "vastfmt", "togglePower"); ?></p>
+<p>Power: <?php PrintSettingText("Power", 3, 3, "vastfmt", "88"); ?>dB&mu;V <?php PrintSettingSave("Power", "Power", "vastfmt"); ?></p>
+<p>Set frequency on playlist start/stop: <?php PrintSettingCheckbox("Set frequency", "SetFreq", "1", "0", "vastfmt", "toggleSettings"); ?></p>
+<p>Frequency: <?php PrintSettingText("Frequency", 8, 8, "vastfmt"); ?>MHz <?php PrintSettingSave("Transmit Frequency", "Frequency", "vastfmt"); ?></p>
+<p>RDS Type: <?php PrintSettingSelect("RDS Type", "RdsType", "RT+", Array("Disabled"=>"disabled", "RT+"=>"rtp", "RT"=>"rt", "PS"=>"ps"), "vastfmt", "toggleStation"); ?></p>
+<p>Station ID: <?php PrintSettingText("Station", 4, 4, "vastfmt"); ?><?php PrintSettingSave("Station ID", "Station", "vastfmt"); ?></p>
+
+</fieldset>
+</div>
+
+<br />
+
+<div id="plugininfo" class="settings">
+<fieldset>
+<legend>Plugin Information</legend>
+<p>Instructions
+<ul>
+<li>Setup transmitter and save to EEPROM, or click the "Toggle transmitter
+with playlist" option above.</li>
+<li>Change audio on "FPP Settings" page.  Go to the FPP Settings screen and
+select the Vast as your sound output instead of the Pi's built-in audio.</li>
+<li>Tag your MP3s/OGG files appropriate.  The tags are used to set the Artist
+and Title fields for RDS's RT+ text. The rest will happen auto-magically!</li>
+</ul>
+</p>
 
 <p>Known Issues:
 <ul>
-<li>Scratchy audio when writing RDS data between songs - <a target="_new"
-href="https://github.com/Materdaddy/fpp-vastfmt/issues/1">Bug 1</a></li>
-
-<li>Possible volume gap between songs (as part of a scratchy audio
-work-around) - <a target="_new"
-href="https://github.com/Materdaddy/fpp-vastfmt/issues/1">Bug 1</a></li>
-
-<li>Vast FMT will "crash" and be unable to receive RDS data if not used with
-a powered USB hub.  If this happens, a cold boot is required (completely
-remove power from the VAST/Pi) - <a target="_new"
+<li>VastFMT will "crash" and be unable to receive RDS data if not used with
+a powered USB hub.  If this happens, the transmitter must be unplugged and re-
+plugged into the Pi - <a target="_new"
 href="https://github.com/Materdaddy/fpp-vastfmt/issues/2">Bug 2</a></li>
 </ul>
 
 Planned Features:
 <ul>
-<li>Setup of the Vast and writing to EEPROM through this page.
+<li>Saving settings to EEPROM.</li>
 </ul>
 
 <p>To report a bug, please file it against the fpp-vastfmt plugin project here:
