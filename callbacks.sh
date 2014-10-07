@@ -17,7 +17,7 @@ usage()
 OPTS=$(getopt -n $0 --options lt:d: --longoptions list,type:,data: -- "$@")
 
 if [ -n "$DEBUG" ]; then
-	echo "Full args: $*" >> $LOGFILE
+	echo "Full args: $*" >> $DEBUG_LOG
 fi
 
 # Die if they fat finger arguments, this program will be run as root
