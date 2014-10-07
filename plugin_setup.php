@@ -27,6 +27,8 @@ unset($output);
 
 <br />
 
+<?php if (function_exists('PrintSettingSave')): ?>
+
 <div id="transmittersettings" class="settings">
 <fieldset>
 <legend>Transmitter Settings</legend>
@@ -103,6 +105,23 @@ and Title fields for RDS's RT+ text. The rest will happen auto-magically!</li>
 </ul>
 </p>
 
+<?php else: ?>
+
+<div id="rds" class="settings">
+<fieldset>
+<legend>RDS Support Instructions</legend>
+
+<p style="color: red;">You're running an old version of FPP that doesn't yet contain the required
+helper functions needed by this plugin. Advanced features are disabled.</p>
+
+<p>You must first set up your Vast V-FMT212R using the Vast Electronics
+software and save it to the EEPROM.  Once you have your VAST setup to transmit
+on your frequency when booted, you can plug it into the Raspberry Pi and
+reboot.  You will then go to the FPP Settings screen and select the Vast as
+your sound output instead of the Pi's built-in audio.</p>
+
+<?php endif; ?>
+
 <p>Known Issues:
 <ul>
 <li>VastFMT will "crash" and be unable to receive RDS data if not used with
@@ -122,4 +141,3 @@ Planned Features:
 </fieldset>
 </div>
 <br />
-
