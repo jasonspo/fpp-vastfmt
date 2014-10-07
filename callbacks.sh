@@ -115,6 +115,10 @@ case $operation in
 			title="$(echo $Media | sed -n '/-/p' | cut -d- -f2 | sed 's/^\s*//g;s/\s*\.\(ogg\|mp4\|mkv\|mp3\)\s*$//g;')"
 		fi
 
+		if [ -z "$rds_setting" ]; then
+			rds_setting=rtp
+		fi
+
 		case $rds_setting in
 			rtp)
 				if [ -n "$artist" ] && [ -n "$title" ]; then
