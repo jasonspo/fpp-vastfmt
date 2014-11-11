@@ -79,11 +79,11 @@ function toggleStation()
 $(function(){toggleSettings();toggleStation();togglePower();});
 </script>
 
-<p>Toggle transmitter with playlist: <?php PrintSettingCheckbox("Turn off", "TurnOff", "1", "0", "vastfmt", "togglePower"); ?></p>
+<p>Toggle transmitter with playlist: <?php PrintSettingCheckbox("Turn off", "TurnOff", "0", "0", "1", "0", "vastfmt", "togglePower"); ?></p>
 <p>Power: <?php PrintSettingText("Power", 3, 3, "vastfmt", "88"); ?>dB&mu;V <?php PrintSettingSave("Power", "Power", "vastfmt"); ?></p>
-<p>Set frequency on playlist start/stop: <?php PrintSettingCheckbox("Set frequency", "SetFreq", "1", "0", "vastfmt", "toggleSettings"); ?></p>
+<p>Set frequency on playlist start/stop: <?php PrintSettingCheckbox("Set frequency", "SetFreq", "0", "0", "1", "0", "vastfmt", "toggleSettings"); ?></p>
 <p>Frequency: <?php PrintSettingText("Frequency", 8, 8, "vastfmt"); ?>MHz <?php PrintSettingSave("Transmit Frequency", "Frequency", "vastfmt"); ?></p>
-<p>RDS Type: <?php PrintSettingSelect("RDS Type", "RdsType", "RT+", Array("Disabled"=>"disabled", "RT+"=>"rtp", "RT"=>"rt", "PS"=>"ps"), "vastfmt", "toggleStation"); ?></p>
+<p>RDS Type: <?php PrintSettingSelect("RDS Type", "RdsType", "0", "0", "RT+", Array("Disabled"=>"disabled", "RT+"=>"rtp", "RT"=>"rt", "PS"=>"ps"), "vastfmt", "toggleStation"); ?></p>
 <p>Station ID: <?php PrintSettingText("Station", 4, 4, "vastfmt"); ?><?php PrintSettingSave("Station ID", "Station", "vastfmt"); ?></p>
 
 </fieldset>
