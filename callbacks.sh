@@ -67,6 +67,11 @@ done
 
 vast_args="$(dirname $0)/bin/rds"
 
+if [ ! -e ${CFGDIR}/plugin.vastfmt ]; then
+	echo "Error finding plugin settings, please configure FMT!" >&2
+	exit 1
+fi
+
 transmit_setting=$(grep -i "^TurnOff\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
 power=$(grep -i "^Power\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
 rds_setting=$(grep -i "^RdsType\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
