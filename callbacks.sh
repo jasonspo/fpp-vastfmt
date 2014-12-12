@@ -65,6 +65,7 @@ while true; do
 	esac
 done
 
+killall rds
 vast_args="$(dirname $0)/bin/rds"
 
 if [ ! -e ${CFGDIR}/plugin.vastfmt ]; then
@@ -167,7 +168,11 @@ case $operation in
 			echo >> ${DEBUG_LOG}
 		fi
 
-		(eval $vast_args &)
+		if [ -n "$DEBUG" ]; then
+			eval timeout 5 $vast_args >> ${DEBUG_LOG} 2>&1
+		else
+			eval timeout 5 $vast_args
+		fi
 		;;
 	playlist)
 		# Without this sleep, sometimes our playlist start and
@@ -205,7 +210,11 @@ case $operation in
 			echo >> ${DEBUG_LOG}
 		fi
 
-		(eval $vast_args &)
+		if [ -n "$DEBUG" ]; then
+			eval timeout 5 $vast_args >> ${DEBUG_LOG} 2>&1
+		else
+			eval timeout 5 $vast_args
+		fi
 		;;
 	*)
 		die "You must specify a callback type!"
