@@ -106,9 +106,9 @@ case $operation in
 			vast_args="$vast_args --rds"
 		fi
 
-		# This voodoo turns our json into environment variables we
-		# can simply parse
-		eval $(echo $DATA | sed 's/^{//;s/}$//;s/,\s*/\n/g;s/"\([^"]*\)"\:\s*"\([^"]*\)"/\1="\2"/g')
+		# Use jq to parse our JSON data
+		artist=$(echo $DATA | ./jq/jq -r ".artist")
+		title=$(echo $DATA | ./jq/jq -r ".title")
 
 		# Try to grab artist if Media exists.  This assumes the filename
 		# is "Artist - Title.extension"

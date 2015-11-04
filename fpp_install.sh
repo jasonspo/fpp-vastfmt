@@ -27,4 +27,12 @@ make -C vastfmt CXX=$CXX
 mkdir -p bin
 cp vastfmt/radio bin/rds
 
+# Get jq going for parsing our json data
+pushd jq
+autoreconf -i
+./configure --disable-maintainer-mode
+make src/builtin.inc
+make
+popd
+
 popd
