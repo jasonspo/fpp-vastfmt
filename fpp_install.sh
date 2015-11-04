@@ -16,6 +16,13 @@ if [ "$CXX" == "g++" ]; then
 	git reset --hard 91b76c154d967ba22c5dc25831de6b888065ff87
 	popd
 fi
+
+# Before building, check that we have libusb-1.0-0-dev
+if ! dpkg --get-selections | grep -cq libusb-1.0-0-dev; then
+	$SUDO apt-get -q -y update
+	$SUDO apt-get -q -y --reinstall install libusb-1.0-0-dev
+fi
+
 make -C vastfmt CXX=$CXX
 mkdir -p bin
 cp vastfmt/radio bin/rds
