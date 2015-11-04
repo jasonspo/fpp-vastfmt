@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #DEBUG=1
-DEBUG_LOG=${DEBUG_LOG:-/home/pi/media/logs/vastfmt.log}
+DEBUG_LOG=${DEBUG_LOG:-${LOGDIR}/vastfmt.log}
 
 die()
 {
