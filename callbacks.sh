@@ -107,8 +107,8 @@ case $operation in
 		fi
 
 		# Use jq to parse our JSON data
-		artist=$(echo $DATA | ./jq/jq -r ".artist")
-		title=$(echo $DATA | ./jq/jq -r ".title")
+		artist=$(echo $DATA | $(dirname $0)/jq/jq -r ".artist")
+		title=$(echo $DATA | $(dirname $0)/jq/jq -r ".title")
 
 		# Try to grab artist if Media exists.  This assumes the filename
 		# is "Artist - Title.extension"
