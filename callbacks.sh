@@ -75,7 +75,7 @@ fi
 
 transmit_setting=$(grep -i "^TurnOff\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
 power=$(grep -i "^Power\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
-rds_setting=$(grep -i "^RdsType\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
+rds_setting=$(grep -i "^RdsType\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*\"\(.*\)\"/\1/")
 set_frequency=$(grep -i "^SetFreq\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
 frequency=$(grep -i "^Frequency\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
 station=$(grep -i "^Station\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
