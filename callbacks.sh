@@ -76,6 +76,7 @@ fi
 transmit_setting=$(grep -i "^TurnOff\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
 power=$(grep -i "^Power\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
 rds_setting=$(grep -i "^RdsType\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*\"\(.*\)\"/\1/")
+rds_static_text=$(grep -i "^RDSStaticText\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*\"\(.*\)\"/\1/")
 set_frequency=$(grep -i "^SetFreq\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
 frequency=$(grep -i "^Frequency\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
 station=$(grep -i "^Station\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*\"\(.*\)\"/\1/")
@@ -87,6 +88,7 @@ if [ -n "$DEBUG" ]; then
 	echo "set transmit: $transmit_setting" >&2
 	echo "power: $power" >&2
 	echo "rds type: $rds_setting" >&2
+	echo "rds static text: $rds_static_text" >&2
 	echo "set freq: $set_frequency" >&2
 	echo "frequency: $frequency" >&2
 	echo "station: $station" >&2
@@ -198,10 +200,16 @@ case $operation in
 					vast_args="$vast_args --rds"
 				fi
 			fi
+			if [ ${#rds_static_text} -gt 0 ]; then
+				vast_args="$vast_args --rds-text \"$rds_static_text\""
+			fi
 		else
 			echo "turn things off..."
 			if [ "x$transmit_setting" == "x1" ]; then
 				vast_args="$vast_args -n"
+			fi
+			if [ ${#rds_static_text} -gt 0 ]; then
+				vast_args="$vast_args --rds-text \"$rds_static_text\""
 			fi
 		fi
 
