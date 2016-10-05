@@ -53,13 +53,11 @@ function toggleSettings()
 	{
 		$('#Frequency').prop("disabled", false);
 		$('#saveFrequency').prop("disabled", false);
-		$('#RdsType').prop("disabled", false);
 	}
 	else
 	{
 		$('#Frequency').prop("disabled", true);
 		$('#saveFrequency').prop("disabled", true);
-		$('#RdsType').prop("disabled", true);
 	}
 }
 function toggleStation()
