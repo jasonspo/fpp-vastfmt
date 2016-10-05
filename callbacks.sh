@@ -78,7 +78,7 @@ power=$(grep -i "^Power\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
 rds_setting=$(grep -i "^RdsType\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*\"\(.*\)\"/\1/")
 set_frequency=$(grep -i "^SetFreq\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
 frequency=$(grep -i "^Frequency\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
-station=$(grep -i "^Station\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
+station=$(grep -i "^Station\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*\"\(.*\)\"/\1/")
 
 if [ -n "$DEBUG" ]; then
 
@@ -192,7 +192,11 @@ case $operation in
 				vast_args="$vast_args -f $frequency"
 			fi
 			if [ "x$rds_setting" != "xdisabled" ]; then
-				vast_args="$vast_args --rds -s $station"
+				if [ ${#station} -gt 0 ]; then
+					vast_args="$vast_args --rds -s \"$station\""
+				else
+					vast_args="$vast_args --rds"
+				fi
 			fi
 		else
 			echo "turn things off..."
