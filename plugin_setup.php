@@ -53,24 +53,26 @@ function toggleSettings()
 	{
 		$('#Frequency').prop("disabled", false);
 		$('#saveFrequency').prop("disabled", false);
-		$('#RdsType').prop("disabled", false);
 	}
 	else
 	{
 		$('#Frequency').prop("disabled", true);
 		$('#saveFrequency').prop("disabled", true);
-		$('#RdsType').prop("disabled", true);
 	}
 }
 function toggleStation()
 {
 	if ($('#RdsType').val() == "disabled")
 	{
+		$('#RDSStaticText').prop("disabled", true);
+		$('#saveRDSStaticText').prop("disabled", true);
 		$('#Station').prop("disabled", true);
 		$('#saveStation').prop("disabled", true);
 	}
 	else
 	{
+		$('#RDSStaticText').prop("disabled", false);
+		$('#saveRDSStaticText').prop("disabled", false);
 		$('#Station').prop("disabled", false);
 		$('#saveStation').prop("disabled", false);
 	}
@@ -84,6 +86,7 @@ $(function(){toggleSettings();toggleStation();togglePower();});
 <p>Set frequency on playlist start/stop: <?php PrintSettingCheckbox("Set frequency", "SetFreq", 1, 0, "1", "0", "vastfmt", "toggleSettings"); ?></p>
 <p>Frequency: <?php PrintSettingText("Frequency", 1, 0, 8, 8, "vastfmt"); ?>MHz <?php PrintSettingSave("Transmit Frequency", "Frequency", 1, 0, "vastfmt"); ?></p>
 <p>RDS Type: <?php PrintSettingSelect("RDS Type", "RdsType", 1, 0, "RT+", Array("Disabled"=>"disabled", "RT+"=>"rtp", "RT"=>"rt", "PS"=>"ps"), "vastfmt", "toggleStation"); ?></p>
+<p>RDS Static Text: <?php PrintSettingText("RDSStaticText", 1, 0, 50, 50, "vastfmt"); ?><?php PrintSettingSave("RDS Static Text", "RDSStaticText", 1, 0, "vastfmt"); ?></p>
 <p>Station ID: <?php PrintSettingText("Station", 1, 0, 4, 4, "vastfmt"); ?><?php PrintSettingSave("Station ID", "Station", 1, 0, "vastfmt"); ?></p>
 
 </fieldset>
