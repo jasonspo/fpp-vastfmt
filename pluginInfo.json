@@ -8,15 +8,15 @@
 	"bugURL": "https://github.com/FalconChristmas/fpp-vastfmt/issues",
 	"versions": [
 		{
-			"minFPPVersion": 0,
-			"maxFPPVersion": 1.99,
+			"minFPPVersion": "0",
+			"maxFPPVersion": "1.9999",
 			"branch": "master",
 			"allowUpdates": 0,
 			"sha": "fd01a57464e9001441c11ae54dced2e1019c18bf"
 		},
 		{
-			"minFPPVersion": 2.0,
-			"maxFPPVersion": 0,
+			"minFPPVersion": "2.0",
+			"maxFPPVersion": "0",
 			"branch": "master",
 			"allowUpdates": 1,
 			"sha": "749dc6bce52276a44e1223647809083947aa037d"
