@@ -81,13 +81,13 @@ function toggleStation()
 $(function(){toggleSettings();toggleStation();togglePower();});
 </script>
 
-<p>Toggle transmitter with playlist: <?php PrintSettingCheckbox("Turn off", "TurnOff", 1, 0, "1", "0", "vastfmt", "togglePower"); ?></p>
-<p>Power: <?php PrintSettingText("Power", 1, 0, 3, 3, "vastfmt", "88"); ?>dB&mu;V <?php PrintSettingSave("Power", "Power", 1, 0, "vastfmt"); ?></p>
-<p>Set frequency on playlist start/stop: <?php PrintSettingCheckbox("Set frequency", "SetFreq", 1, 0, "1", "0", "vastfmt", "toggleSettings"); ?></p>
-<p>Frequency: <?php PrintSettingText("Frequency", 1, 0, 8, 8, "vastfmt"); ?>MHz <?php PrintSettingSave("Transmit Frequency", "Frequency", 1, 0, "vastfmt"); ?></p>
-<p>RDS Type: <?php PrintSettingSelect("RDS Type", "RdsType", 1, 0, "RT+", Array("Disabled"=>"disabled", "RT+"=>"rtp", "RT"=>"rt", "PS"=>"ps"), "vastfmt", "toggleStation"); ?></p>
-<p>RDS Static Text: <?php PrintSettingText("RDSStaticText", 1, 0, 50, 50, "vastfmt"); ?><?php PrintSettingSave("RDS Static Text", "RDSStaticText", 1, 0, "vastfmt"); ?></p>
-<p>Station ID: <?php PrintSettingText("Station", 1, 0, 4, 4, "vastfmt"); ?><?php PrintSettingSave("Station ID", "Station", 1, 0, "vastfmt"); ?></p>
+<p>Toggle transmitter with playlist: <?php PrintSettingCheckbox("Turn off", "TurnOff", 1, 0, "1", "0", "fpp-vastfmt", "togglePower"); ?></p>
+<p>Power: <?php PrintSettingText("Power", 1, 0, 3, 3, "vastfmt", "88"); ?>dB&mu;V <?php PrintSettingSave("Power", "Power", 1, 0, "fpp-vastfmt"); ?></p>
+<p>Set frequency on playlist start/stop: <?php PrintSettingCheckbox("Set frequency", "SetFreq", 1, 0, "1", "0", "fpp-vastfmt", "toggleSettings"); ?></p>
+<p>Frequency: <?php PrintSettingText("Frequency", 1, 0, 8, 8, "vastfmt"); ?>MHz <?php PrintSettingSave("Transmit Frequency", "Frequency", 1, 0, "fpp-vastfmt"); ?></p>
+<p>RDS Type: <?php PrintSettingSelect("RDS Type", "RdsType", 1, 0, "RT+", Array("Disabled"=>"disabled", "RT+"=>"rtp", "RT"=>"rt", "PS"=>"ps"), "fpp-vastfmt", "toggleStation"); ?></p>
+<p>RDS Static Text: <?php PrintSettingText("RDSStaticText", 1, 0, 50, 50, "vastfmt"); ?><?php PrintSettingSave("RDS Static Text", "RDSStaticText", 1, 0, "fpp-vastfmt"); ?></p>
+<p>Station ID: <?php PrintSettingText("Station", 1, 0, 4, 4, "vastfmt"); ?><?php PrintSettingSave("Station ID", "Station", 1, 0, "fpp-vastfmt"); ?></p>
 
 </fieldset>
 </div>

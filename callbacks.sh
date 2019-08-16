@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#DEBUG=1
+# DEBUG=1
 DEBUG_LOG=${DEBUG_LOG:-${LOGDIR}/vastfmt.log}
 
 die()
@@ -68,18 +68,18 @@ done
 killall rds
 vast_args="$(dirname $0)/bin/rds"
 
-if [ ! -e ${CFGDIR}/plugin.vastfmt ]; then
+if [ ! -e ${CFGDIR}/plugin.fpp-vastfmt ]; then
 	echo "Error finding plugin settings, please configure FMT!" >&2
 	exit 1
 fi
 
-transmit_setting=$(grep -i "^TurnOff\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
-power=$(grep -i "^Power\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
-rds_setting=$(grep -i "^RdsType\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*\"\(.*\)\"/\1/")
-rds_static_text=$(grep -i "^RDSStaticText\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*\"\(.*\)\"/\1/")
-set_frequency=$(grep -i "^SetFreq\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
-frequency=$(grep -i "^Frequency\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*//")
-station=$(grep -i "^Station\s*=.*" ${CFGDIR}/plugin.vastfmt | sed -e "s/.*=\s*\"\(.*\)\"/\1/")
+transmit_setting=$(grep -i "^TurnOff\s*=.*" ${CFGDIR}/plugin.fpp-vastfmt | sed -e "s/.*=\s*//")
+power=$(grep -i "^Power\s*=.*" ${CFGDIR}/plugin.fpp-vastfmt | sed -e "s/.*=\s*//")
+rds_setting=$(grep -i "^RdsType\s*=.*" ${CFGDIR}/plugin.fpp-vastfmt | sed -e "s/.*=\s*\"\(.*\)\"/\1/")
+rds_static_text=$(grep -i "^RDSStaticText\s*=.*" ${CFGDIR}/plugin.fpp-vastfmt | sed -e "s/.*=\s*\"\(.*\)\"/\1/")
+set_frequency=$(grep -i "^SetFreq\s*=.*" ${CFGDIR}/plugin.fpp-vastfmt | sed -e "s/.*=\s*//")
+frequency=$(grep -i "^Frequency\s*=.*" ${CFGDIR}/plugin.fpp-vastfmt | sed -e "s/.*=\s*//")
+station=$(grep -i "^Station\s*=.*" ${CFGDIR}/plugin.fpp-vastfmt | sed -e "s/.*=\s*\"\(.*\)\"/\1/")
 
 if [ -n "$DEBUG" ]; then
 
@@ -109,8 +109,8 @@ case $operation in
 		fi
 
 		# Use jq to parse our JSON data
-		artist=$(echo $DATA | $(dirname $0)/jq/jq -r ".artist")
-		title=$(echo $DATA | $(dirname $0)/jq/jq -r ".title")
+		artist=$(echo $DATA | jq -r ".artist")
+		title=$(echo $DATA | jq -r ".title")
 
 		# Try to grab artist if Media exists.  This assumes the filename
 		# is "Artist - Title.extension"
