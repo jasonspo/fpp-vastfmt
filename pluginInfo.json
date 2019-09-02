@@ -26,14 +26,14 @@
                 "maxFPPVersion": "3.2.99",
                 "branch": "master",
                 "sha": "ada07e1d19f5eb7cafb6be65f0e4791afd770201",
-                "allowUpdates": 0,
+                "allowUpdates": 0
         },
         {
             "minFPPVersion": "3.3",
             "maxFPPVersion": "0",
             "branch": "master",
             "sha": "",
-            "allowUpdates": 0,
+            "allowUpdates": 0
         }
 	]
 }
