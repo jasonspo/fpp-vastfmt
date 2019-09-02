@@ -1,146 +1,103 @@
-<?php
-
-exec("if cat /proc/asound/cards | sed -n '/\s[0-9]*\s\[/p' | grep -iq vast; then echo 1; else echo 0; fi", $output, $return_val);
-if ( $return_val )
+<?php $outputGPIOReset = "";
+if (isset($_POST["GPIOResetButton"]))
 {
-	error_log("Failed our command to check for the FM transmitter");
+$outputGPIOReset = shell_exec(escapeshellcmd("sudo ".$pluginDirectory."/".$_GET['plugin']."/callbacks.py --reset"));
 }
-$fm_audio = ($output[0] == 1);
-unset($output);
-
 ?>
 
-
-<div id="transmitterinfo" class="settings">
-<fieldset>
-<legend>Transmitter Information</legend>
-<p>Vast Electronics V-FMT212R: <?php echo ( $fm_audio ? "<span class='good'>Detected</span>" : "<span class='bad'>Not Detected</span>" ); ?></p>
-
-<?php if ( $fm_audio ): ?>
-<p>To configure FPP to use the FM transmitter for audio output, go to the <a href="/settings.php">settings page</a> and select "Transmitter" from the drop-down for "Audio Output Device".</p>
-<?php else: ?>
-<p>To use the VastFMT for audio output, please plug in device and reboot.</p>
-<?php endif; ?>
-
-</fieldset>
-</div>
-
-<br />
-
-<?php if (function_exists('PrintSettingSave')): ?>
-
-<div id="transmittersettings" class="settings">
-<fieldset>
-<legend>Transmitter Settings</legend>
-
-<script>
-function togglePower()
-{
-	if ($('#TurnOff').is(':checked'))
-	{
-		$('#Power').prop("disabled", false);
-		$('#savePower').prop("disabled", false);
-	}
-	else
-	{
-		$('#Power').prop("disabled", true);
-		$('#savePower').prop("disabled", true);
-	}
-}
-function toggleSettings()
-{
-	if ($('#SetFreq').is(':checked'))
-	{
-		$('#Frequency').prop("disabled", false);
-		$('#saveFrequency').prop("disabled", false);
-	}
-	else
-	{
-		$('#Frequency').prop("disabled", true);
-		$('#saveFrequency').prop("disabled", true);
-	}
-}
-function toggleStation()
-{
-	if ($('#RdsType').val() == "disabled")
-	{
-		$('#RDSStaticText').prop("disabled", true);
-		$('#saveRDSStaticText').prop("disabled", true);
-		$('#Station').prop("disabled", true);
-		$('#saveStation').prop("disabled", true);
-	}
-	else
-	{
-		$('#RDSStaticText').prop("disabled", false);
-		$('#saveRDSStaticText').prop("disabled", false);
-		$('#Station').prop("disabled", false);
-		$('#saveStation').prop("disabled", false);
-	}
-}
-
-$(function(){toggleSettings();toggleStation();togglePower();});
+<script type="text/javascript">
+<!--
+    function toggle(id) {
+       var e = document.getElementById(id);
+       if(e.style.display == 'block')
+          e.style.display = 'none';
+       else
+          e.style.display = 'block';
+    }
+//-->
 </script>
 
-<p>Toggle transmitter with playlist: <?php PrintSettingCheckbox("Turn off", "TurnOff", 1, 0, "1", "0", "fpp-vastfmt", "togglePower"); ?></p>
-<p>Power: <?php PrintSettingText("Power", 1, 0, 3, 3, "vastfmt", "88"); ?>dB&mu;V <?php PrintSettingSave("Power", "Power", 1, 0, "fpp-vastfmt"); ?></p>
-<p>Set frequency on playlist start/stop: <?php PrintSettingCheckbox("Set frequency", "SetFreq", 1, 0, "1", "0", "fpp-vastfmt", "toggleSettings"); ?></p>
-<p>Frequency: <?php PrintSettingText("Frequency", 1, 0, 8, 8, "vastfmt"); ?>MHz <?php PrintSettingSave("Transmit Frequency", "Frequency", 1, 0, "fpp-vastfmt"); ?></p>
-<p>RDS Type: <?php PrintSettingSelect("RDS Type", "RdsType", 1, 0, "RT+", Array("Disabled"=>"disabled", "RT+"=>"rtp", "RT"=>"rt", "PS"=>"ps"), "fpp-vastfmt", "toggleStation"); ?></p>
-<p>RDS Static Text: <?php PrintSettingText("RDSStaticText", 1, 0, 50, 50, "vastfmt"); ?><?php PrintSettingSave("RDS Static Text", "RDSStaticText", 1, 0, "fpp-vastfmt"); ?></p>
-<p>Station ID: <?php PrintSettingText("Station", 1, 0, 4, 4, "vastfmt"); ?><?php PrintSettingSave("Station ID", "Station", 1, 0, "fpp-vastfmt"); ?></p>
 
+<div id="VASTFMTPluginsettings" class="settings">
+<fieldset>
+<legend>VAST-FMT Plugin Settings</legend>
+<p>Start VAST-FMT at: <?php PrintSettingSelect("Start", "Start", 1, 0, "FPPDStart", Array("FPPD Start (default)"=>"FPPDStart", "Playlist Start"=>"PlaylistStart", "Never"=>"Never"), "fpp-vastfmt", ""); ?><br />
+At Start, the VAST-FMT is reset, FM settings initialized, will broadcast any audio played, and send static RDS messages (if enabled).</p>
+<p>Stop VAST-FMT at: <?php PrintSettingSelect("Stop", "Stop", 1, 0, "Never", Array("Playlist Stop"=>"PlaylistStop", "Never (default)"=>"Never"), "fpp-vastfmt", ""); ?><br />
+At Stop, the VAST-FMT is reset. Listeners will hear static.</p>
 </fieldset>
 </div>
 
 <br />
 
-<div id="plugininfo" class="settings">
+<div id="VASTFMTsettings" class="settings">
 <fieldset>
-<legend>Plugin Information</legend>
-<p>Instructions
-<ul>
-<li>Setup transmitter and save to EEPROM, or click the "Toggle transmitter
-with playlist" option above.</li>
-<li>Change audio on "FPP Settings" page.  Go to the FPP Settings screen and
-select the Vast as your sound output instead of the Pi's built-in audio.</li>
-<li>Tag your MP3s/OGG files appropriate.  The tags are used to set the Artist
-and Title fields for RDS's RT+ text. The rest will happen auto-magically!</li>
-</ul>
-</p>
-
-<?php else: ?>
-
-<div id="rds" class="settings">
-<fieldset>
-<legend>RDS Support Instructions</legend>
-
-<p style="color: red;">You're running an old version of FPP that doesn't yet contain the required
-helper functions needed by this plugin. Advanced features are disabled.</p>
-
-<p>You must first set up your Vast V-FMT212R using the Vast Electronics
-software and save it to the EEPROM.  Once you have your VAST setup to transmit
-on your frequency when booted, you can plug it into the Raspberry Pi and
-reboot.  You will then go to the FPP Settings screen and select the Vast as
-your sound output instead of the Pi's built-in audio.</p>
-
-<?php endif; ?>
-
-<p>Known Issues:
-<ul>
-<li>VastFMT will "crash" and be unable to receive RDS data if not used with
-a powered USB hub.  If this happens, the transmitter must be unplugged and re-
-plugged into the Pi - <a target="_new"
-href="https://github.com/Materdaddy/fpp-vastfmt/issues/2">Bug 2</a></li>
-</ul>
-
-Planned Features:
-<ul>
-<li>Saving settings to EEPROM.</li>
-</ul>
-
-<p>To report a bug, please file it against the fpp-vastfmt plugin project here:
-<a href="https://github.com/Materdaddy/fpp-vastfmt/issues/new" target="_new">fpp-vastfmt GitHub Issues</a></p>
-
+<legend>VAST-FMT FM Settings</legend>
+<p>Frequency (76.00-108.00): <?php PrintSettingText("Frequency", 1, 0, 6, 6, "fpp-vastfmt", "100.10"); ?>MHz <?php PrintSettingSave("Frequency", "Frequency", 1, 0, "fpp-vastfmt"); ?></p>
+<p>Power (88-115, 116-120<sup>*</sup>): <?php PrintSettingText("Power", 1, 0, 3, 3, "fpp-vastfmt", "110"); ?>dB&mu;V <?php PrintSettingSave("Power", "Power", 1, 0, "fpp-vastfmt"); ?>
+<br /><sup>*</sup>Can be set as high as 120dB&mu;V, but voltage accuracy above 115dB&mu;V is not guaranteed.</p>
+<p>Preemphasis: <?php PrintSettingSelect("Preemphasis", "Preemphasis", 1, 0, "75us", Array("50&mu;s (Europe, Australia, Japan)"=>"50us", "75&mu;s (USA, default)"=>"75us"), "fpp-vastfmt", ""); ?></p>
+<p>Antenna Tuning Capacitor (0=Auto, 1-191): <?php PrintSettingText("AntCap", 1, 0, 3, 3, "fpp-vastfmt", "0"); ?> * 0.25pF <?php PrintSettingSave("AntCap", "AntCap", 1, 0, "fpp-vastfmt"); ?></p>
 </fieldset>
 </div>
+
+<br />
+
+<div id="VASTFMTRDSsettings" class="settings">
+<fieldset>
+<legend>VAST-FMT RDS Settings</legend>
+<p>Enable RDS: <?php PrintSettingCheckbox("EnableRDS", "EnableRDS", 1, 0, "True", "False", "fpp-vastfmt", ""); ?></p>
+<p>RDS Station - Sent 8 characters at a time</p>
+<p>Station Text: <?php PrintSettingText("StationText", 1, 0, 64, 32, "fpp-vastfmt", "Merry   Christ- mas"); ?>
+
+<br />
+
+<p>RDS Text: <?php PrintSettingText("RDSTextText", 1, 0, 64, 32, "fpp-vastfmt", "[{Artist} - {Title}]"); ?>
+<p>
+Place {Artist} or {Title} where the media artist/title should be placed. Area's wrapped in brackets ( [] ) will not be output unless media is present.
+
+
+<p>Program Type (PTY North America / Europe): <?php PrintSettingSelect("Pty", "Pty", 1, 0, 2,
+Array(
+"0 - None / None"=>0, 
+"1 - News / News"=>1, 
+"2 - Information / Current Affairs"=>2, 
+"3 - Sport / Information"=>3, 
+"4 - Talk / Sport"=>4, 
+"5 - Rock / Education"=>5, 
+"6 - Classic Rock / Drama"=>6, 
+"7 - Adult Hits / Culture"=>7, 
+"8 - Soft Rock / Science"=>8, 
+"9 - Top 40 / Varied"=>9, 
+"10 - Country / Pop"=>10, 
+"11 - Oldies / Rock"=>11, 
+"12 - Soft Music / Easy Listening"=>12, 
+"13 - Nostalgia / Light Classical"=>13, 
+"14 - Jazz / Serious Classical"=>14, 
+"15 - Classical / Other Music"=>15, 
+"16 - R&B / Weather"=>16, 
+"17 - Soft R&B / Finance"=>17, 
+"18 - Language / Childrens"=>18, 
+"19 - Religious Music / Social Affairs"=>19, 
+"20 - Religious Talk / Religion"=>20, 
+"21 - Personality / Phone-In"=>21, 
+"22 - Public / Travel"=>22, 
+"23 - College / Leisure"=>23, 
+"24 - --- / Jazz"=>24, 
+"25 - --- / Country"=>25, 
+"26 - --- / National Music"=>26, 
+"27 - --- / Oldies"=>27, 
+"28 - --- / Folk"=>28, 
+"29 - Weather / Documentary"=>29), 
+"fpp-vastfmt", ""); ?> - <a href="https://www.electronics-notes.com/articles/audio-video/broadcast-audio/rds-radio-data-system-pty-codes.php">Additional PTY information</a></p>
+</fieldset>
+</div>
+
+<br />
+
+<div id='fileViewer' title='File Viewer' style="display: none">
+  <div id='fileText'>
+  </div>
+</div>
+
 <br />

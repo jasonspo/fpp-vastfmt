@@ -21,13 +21,20 @@
 			"allowUpdates": 0,
 			"sha": "749dc6bce52276a44e1223647809083947aa037d"
 		},
-                {
-                        "minFPPVersion": "3.0",
-                        "maxFPPVersion": "0",
-                        "branch": "master",
-                        "allowUpdates": 1,
-                        "sha": ""
-                }
+        {
+                "minFPPVersion": "3.0",
+                "maxFPPVersion": "3.2.99",
+                "branch": "master",
+                "sha": "ada07e1d19f5eb7cafb6be65f0e4791afd770201",
+                "allowUpdates": 0,
+        },
+        {
+            "minFPPVersion": "3.3",
+            "maxFPPVersion": "0",
+            "branch": "master",
+            "sha": "",
+            "allowUpdates": 0,
+        }
 	]
 }
 

@@ -27,19 +27,8 @@ eval set -- "$OPTS"
 while true; do
 	case $1 in
 		-l|--list)
-			echo "media,playlist"; exit 0;
-		;;
-		-t|--type)
-			shift
-			case $1 in
-				media|playlist)
-					operation=$1
-					;;
-				*)
-					die "Error: Unsupported type $1!"
-					;;
-			esac
-			shift; continue
+			echo "c++";
+            exit 0;
 		;;
 		-h|--help)
 			usage
@@ -48,11 +37,6 @@ while true; do
 		-v|--version)
 			printf "%s, version %s\n" "$PROGRAM_NAME" "$PROGRAM_VERSION"
 			exit 0
-		;;
-		-d|--data)
-			shift
-			DATA=$(echo $1 | tr -dc '[:alnum:][:space:][:punct:]')
-			shift; continue
 		;;
 		--)
 			# no more arguments to parse
