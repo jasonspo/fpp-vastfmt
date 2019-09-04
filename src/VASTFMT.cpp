@@ -158,7 +158,9 @@ bool VASTFMT::sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &dataIn,
     aucBufOut[2] = RequestSi4711Access;
     aucBufOut[3] = dataIn.size() + 1;
     aucBufOut[4] = cmd;
-    memcpy(&aucBufOut[5], &dataIn[0], dataIn.size());
+    if (dataIn.size() > 0) {
+        memcpy(&aucBufOut[5], &dataIn[0], dataIn.size());
+    }
 
     hid_write(phd, aucBufOut, 43);
     int r = hid_read(phd, aucBufIn, 42);
