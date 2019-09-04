@@ -1,10 +1,11 @@
 include /opt/fpp/src/makefiles/common/setup.mk
+include /opt/fpp/src/makefiles/platform/*.mk
 
 all: libfpp-vastfmt.so
 debug: all
 
 CFLAGS+=-I. -I./vastfmt -I/usr/include/libusb-1.0
-OBJECTS_fpp_vastfmt_so += src/FPPVastFM.o  src/hid.o src/Si4713.o src/bitstream.o
+OBJECTS_fpp_vastfmt_so += src/FPPVastFM.o  src/hid.o src/Si4713.o src/bitstream.o src/VASTFMT.o src/I2CSi4713.o
 LIBS_fpp_vastfmt_so += -L/opt/fpp/src -lfpp -lusb-1.0
 CXXFLAGS_src/FPPVastFM.o += -I/opt/fpp/src
 

@@ -1,8 +1,9 @@
-<?php $outputGPIOReset = "";
-if (isset($_POST["GPIOResetButton"]))
-{
-$outputGPIOReset = shell_exec(escapeshellcmd("sudo ".$pluginDirectory."/".$_GET['plugin']."/callbacks.py --reset"));
-}
+<?php
+   
+   $defaultGPIO = "4";
+   if ($settings['Platform'] == "BeagleBone Black") {
+       $defaultGPIO = "14";
+   }
 ?>
 
 <script type="text/javascript">
@@ -18,13 +19,24 @@ $outputGPIOReset = shell_exec(escapeshellcmd("sudo ".$pluginDirectory."/".$_GET[
 </script>
 
 
+<div id="VASTFMTPluginhw" class="settings">
+<fieldset>
+<legend>VAST-FMT/Si4713 Hardware</legend>
+<p>Connection: <?php PrintSettingSelect("Connection", "Connection", 1, 0, "USB", Array("USB"=>"USB", "I2C"=>"I2C"), "fpp-vastfmt", ""); ?></p>
+<p>Reset GPIO: <?php PrintSettingTextSaved("ResetPin", 1, 0, 6, 6, "fpp-vastfmt", $defaultGPIO); ?><br />
+I2C connection requires a GPIO pin to reset the Si4713.  Can either be a kernal GPIO number or a pin name like "P9-30". Setting is unused for USB connection. </p>
+</fieldset>
+</div>
+
+<br />
+
 <div id="VASTFMTPluginsettings" class="settings">
 <fieldset>
-<legend>VAST-FMT Plugin Settings</legend>
-<p>Start VAST-FMT at: <?php PrintSettingSelect("Start", "Start", 1, 0, "FPPDStart", Array("FPPD Start (default)"=>"FPPDStart", "Playlist Start"=>"PlaylistStart", "Never"=>"Never"), "fpp-vastfmt", ""); ?><br />
-At Start, the VAST-FMT is reset, FM settings initialized, will broadcast any audio played, and send static RDS messages (if enabled).</p>
-<p>Stop VAST-FMT at: <?php PrintSettingSelect("Stop", "Stop", 1, 0, "Never", Array("Playlist Stop"=>"PlaylistStop", "Never (default)"=>"Never"), "fpp-vastfmt", ""); ?><br />
-At Stop, the VAST-FMT is reset. Listeners will hear static.</p>
+<legend>VAST-FMT/Si4713 Plugin Settings</legend>
+<p>Start at: <?php PrintSettingSelect("Start", "Start", 1, 0, "FPPDStart", Array("FPPD Start (default)"=>"FPPDStart", "Playlist Start"=>"PlaylistStart", "Never"=>"Never"), "fpp-vastfmt", ""); ?><br />
+At Start, the hardware is reset, FM settings initialized, will broadcast any audio played, and send static RDS messages (if enabled).</p>
+<p>Stop at: <?php PrintSettingSelect("Stop", "Stop", 1, 0, "Never", Array("Playlist Stop"=>"PlaylistStop", "Never (default)"=>"Never"), "fpp-vastfmt", ""); ?><br />
+At Stop, the hardware is reset. Listeners will hear static.</p>
 </fieldset>
 </div>
 
@@ -32,12 +44,12 @@ At Stop, the VAST-FMT is reset. Listeners will hear static.</p>
 
 <div id="VASTFMTsettings" class="settings">
 <fieldset>
-<legend>VAST-FMT FM Settings</legend>
-<p>Frequency (76.00-108.00): <?php PrintSettingText("Frequency", 1, 0, 6, 6, "fpp-vastfmt", "100.10"); ?>MHz <?php PrintSettingSave("Frequency", "Frequency", 1, 0, "fpp-vastfmt"); ?></p>
-<p>Power (88-115, 116-120<sup>*</sup>): <?php PrintSettingText("Power", 1, 0, 3, 3, "fpp-vastfmt", "110"); ?>dB&mu;V <?php PrintSettingSave("Power", "Power", 1, 0, "fpp-vastfmt"); ?>
+<legend>VAST-FMT/Si4713 FM Settings</legend>
+<p>Frequency (76.00-108.00): <?php PrintSettingTextSaved("Frequency", 1, 0, 6, 6, "fpp-vastfmt", "100.10"); ?>MHz</p>
+<p>Power (88-115, 116-120<sup>*</sup>): <?php PrintSettingTextSaved("Power", 1, 0, 3, 3, "fpp-vastfmt", "110"); ?>dB&mu;V
 <br /><sup>*</sup>Can be set as high as 120dB&mu;V, but voltage accuracy above 115dB&mu;V is not guaranteed.</p>
 <p>Preemphasis: <?php PrintSettingSelect("Preemphasis", "Preemphasis", 1, 0, "75us", Array("50&mu;s (Europe, Australia, Japan)"=>"50us", "75&mu;s (USA, default)"=>"75us"), "fpp-vastfmt", ""); ?></p>
-<p>Antenna Tuning Capacitor (0=Auto, 1-191): <?php PrintSettingText("AntCap", 1, 0, 3, 3, "fpp-vastfmt", "0"); ?> * 0.25pF <?php PrintSettingSave("AntCap", "AntCap", 1, 0, "fpp-vastfmt"); ?></p>
+<p>Antenna Tuning Capacitor (0=Auto, 1-191): <?php PrintSettingText("AntCap", 1, 0, 3, 3, "fpp-vastfmt", "0"); ?> * 0.25pF </p>
 </fieldset>
 </div>
 
@@ -45,14 +57,14 @@ At Stop, the VAST-FMT is reset. Listeners will hear static.</p>
 
 <div id="VASTFMTRDSsettings" class="settings">
 <fieldset>
-<legend>VAST-FMT RDS Settings</legend>
+<legend>VAST-FMT/Si4713 RDS Settings</legend>
 <p>Enable RDS: <?php PrintSettingCheckbox("EnableRDS", "EnableRDS", 1, 0, "True", "False", "fpp-vastfmt", ""); ?></p>
-<p>RDS Station - Sent 8 characters at a time</p>
-<p>Station Text: <?php PrintSettingText("StationText", 1, 0, 64, 32, "fpp-vastfmt", "Merry   Christ- mas"); ?>
+<p>RDS Station - Sent 8 characters at a time.  Max of 64 characters.<br />
+Station Text: <?php PrintSettingTextSaved("StationText", 1, 0, 64, 32, "fpp-vastfmt", "Merry   Christ- mas"); ?>
 
 <br />
 
-<p>RDS Text: <?php PrintSettingText("RDSTextText", 1, 0, 64, 32, "fpp-vastfmt", "[{Artist} - {Title}]"); ?>
+<p>RDS Text: <?php PrintSettingTextSaved("RDSTextText", 1, 0, 64, 32, "fpp-vastfmt", "[{Artist} - {Title}]"); ?>
 <p>
 Place {Artist} or {Title} where the media artist/title should be placed. Area's wrapped in brackets ( [] ) will not be output unless media is present.
 

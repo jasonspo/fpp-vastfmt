@@ -4,20 +4,15 @@
 #include <unistd.h>
 #include <termios.h>
 
-#include <httpserver.hpp>
 #include "mediadetails.h"
 #include "common.h"
 #include "settings.h"
 #include "Plugin.h"
 #include "log.h"
 
-#include "Si4713.h"
+#include "VASTFMT.h"
+#include "I2CSi4713.h"
 
-
-// VASTFM vendor/product
-//HID\VID_0451&PID_2100&REV_0101&MI_02
-const uint16_t _usVID=0x0451;  /*!< USB vendor ID. */
-const uint16_t _usPID=0x2100;  /*!< USB product ID. */
 
 static std::string padToNearest(std::string s, int l) {
     if (!s.empty()) {
@@ -58,9 +53,13 @@ public:
     
     void startVast() {
         if (si4713 == nullptr) {
-            si4713 = new Si4713(_usVID, _usPID);
+            if (settings["Connection"] == "I2C") {
+                si4713 = new I2CSi4713(settings["ResetPin"]);
+            } else {
+                si4713 = new VASTFMT();
+            }
             if (si4713->isOk()) {
-                si4713->powerUp();
+                si4713->Init();
                 
                 std::string rev = si4713->getRev();
                 LogInfo(VB_PLUGIN, "VAST-FMT: %s\n", rev.c_str());
@@ -86,6 +85,7 @@ public:
                 LogInfo(VB_PLUGIN, "VAST-FMT: %s\n", ts.c_str());
                 
                 if (settings["EnableRDS"] == "True") {
+                    printf("Enabling RDS\n");
                     si4713->beginRDS();
                     formatAndSendText(settings["StationText"], "", "", true);
                     formatAndSendText(settings["RDSTextText"], "", "", false);
@@ -107,6 +107,9 @@ public:
     
     void formatAndSendText(const std::string &text, const std::string &artist, const std::string &title, bool station) {
         std::string output;
+        
+        int artistIdx = -1;
+        int titleIdx = -1;
         for (int x = 0; x < text.length(); x++) {
             if (text[x] == '[') {
                 if (artist == "" && title == "") {
@@ -121,9 +124,11 @@ public:
                 const static std::string TITLE = "{Title}";
                 std::string subs = text.substr(x);
                 if (subs.rfind(ARTIST) == 0) {
+                    artistIdx = output.length();
                     x += ARTIST.length() - 1;
                     output += artist;
                 } else if (subs.rfind(TITLE) == 0) {
+                    titleIdx = output.length();
                     x += TITLE.length() - 1;
                     output += title;
                 } else {
@@ -155,16 +160,22 @@ public:
             si4713->setRDSStation(fragments);
         } else {
             LogDebug(VB_PLUGIN, "Setting RDS text to %s\n", output.c_str());
-            si4713->setRDSBuffer(output);
+            si4713->setRDSBuffer(output, artistIdx, artist.length(), titleIdx, title.length());
         }
     }
     
+
     virtual void playlistCallback(const Json::Value &playlist, const std::string &action, const std::string &section, int item) {
+        if (action == "stop") {
+            formatAndSendText(settings["StationText"], "", "", true);
+            formatAndSendText(settings["RDSTextText"], "", "", false);
+        }
         if (settings["Start"] == "PlaylistStart" && action == "start") {
             startVast();
         } else if (settings["Stop"] == "PlaylistStop" && action == "stop") {
             stopVast();
         }
+        
     }
     virtual void mediaCallback(const Json::Value &playlist, const MediaDetails &mediaDetails) {
         std::string title = mediaDetails.title;
@@ -194,6 +205,13 @@ public:
         setIfNotFound("StationText", "Merry   Christ- mas", true);
         setIfNotFound("RDSTextText", "[{Artist} - {Title}]", true);
         setIfNotFound("Pty", "2");
+        
+        setIfNotFound("Connection", "USB");
+#ifdef PLATFORM_BBB
+        setIfNotFound("ResetPin", "14");
+#else
+        setIfNotFound("ResetPin", "4");
+#endif
     }
     void setIfNotFound(const std::string &s, const std::string &v, bool emptyAllowed = false) {
         if (settings.find(s) == settings.end()) {

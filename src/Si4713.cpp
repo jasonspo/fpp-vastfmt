@@ -4,22 +4,9 @@
 #include "Si4713.h"
 #include "util/I2CUtils.h"
 
-#include "hidapi.h"
 #include "log.h"
 #include "bitstream.h"
 
-
-#define PCRequestError      0x80
-#define PCTransfer          0x02
-#define RequestDone         0x80
-
-//status bits
-#define STATUS_BIT_STCINT  0x01
-#define STATUS_BIT_ASQINT  0x02
-#define STATUS_BIT_RDSINT  0x04
-#define STATUS_BIT_RSQINT  0x08
-#define STATUS_BIT_ERR     0x40
-#define STATUS_BIT_CTS     0x80
 
 // properties
 #define SI4713_PROP_GPO_IEN  0x0001
@@ -96,289 +83,12 @@
 #define TX_RDS_PS 0x36
 
 
-enum {
-    RequestNone = 0,
-    RequestCpuId,
-    RequestSi4711Reset,             //reset
-    RequestSi4711Access,            //low level access
-    RequestSi4711GetProp,           //medium level get prop
-    RequestSi4711SetProp,           //medium level set prop
-    RequestSi4711PowerStatus,
-    RequestSi4711PowerUp,           //high level power up
-    RequestSi4711PowerDown,         //high level power down
-    RequestSi4711AudioEnable,       //this MUST BE!!! called after setting config to enable audio.
-    RequestSi4711AudioDisable,
-    RequestEepromSectionRead,
-    RequestEepromSectionWrite,
-    RequestSi4711AsqStatus,
-    RequestSi4711TuneStatus,
-    RequestUnknown
-};
-static const char *si471x_requests[] = {
-    "NONE",
-    "CPU ID",
-    "Frontend Reset",
-    "Frontend Access",
-    "Get Property",
-    "Set Property",
-    "Frontend Power Status",
-    "Frontend Power Up",
-    "Frontend Power Down",
-    "Frontend Enable Audio",
-    "Frontend Disable Audio",
-    "EEPROM Read",
-    "EEPROM Write",
-    "unknown"
-};
-#define Si471xRequestStr(x) (x < RequestUnknown ? si471x_requests[x] : si471x_requests[RequestUnknown])
 
-enum {
-    SI4711_OK = 0,
-    SI4711_TIMEOUT,
-    SI4711_COMM_ERR,
-    SI4711_BAD_ARG,
-    SI4711_NOCTS,
-    SI4711_ERROR_UNKNOWN
-};
-static const char *si471x_statuses[] = {
-    "OK",
-    "I2C Timeout",
-    "I2C Communication Error",
-    "Bad Argument",
-    "No CTS!",
-    "unknown"
-};
-#define Si471xStatusStr(x) (x < SI4711_ERROR_UNKNOWN ? si471x_statuses[x] : si471x_statuses[SI4711_ERROR_UNKNOWN])
-
-
-
-class Si4713Connector {
-public:
-    Si4713Connector() {}
-    virtual ~Si4713Connector() {}
-
-    virtual bool isOk() = 0;
-    
-    virtual bool sendDeviceCommand(uint8_t cmd, std::vector<uint8_t> &dataOut, bool ignoreFailures) = 0;
-    virtual bool sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &dataIn, std::vector<uint8_t> &dataOut, bool ignoreFailures) = 0;
-    
-    virtual bool setProperty(uint16_t prop, uint16_t val) = 0;
-    virtual bool getProperty(uint16_t prop, uint16_t &val) = 0;
-
-};
-
-class USBSi4713Connector : public Si4713Connector {
-public:
-    USBSi4713Connector(uint16_t _usVID, uint16_t _usPID) {
-        struct hid_device_info *phdi = nullptr;
-        phdi = hid_enumerate(_usVID,_usPID);
-        if (phdi == nullptr) {
-            return;
-        }
-        phd = hid_open_path(phdi->path);
-        hid_free_enumeration(phdi);
-        phdi=nullptr;
-    }
-    virtual ~USBSi4713Connector() {
-        if (phd) {
-            hid_close(phd);
-        }
-    }
-    virtual bool isOk() override { return phd != nullptr; }
-    virtual bool sendDeviceCommand(uint8_t cmd, std::vector<uint8_t> &dataOut, bool ignoreFailures) {
-        unsigned char aucBufIn[43];
-        unsigned char aucBufOut[43];
-        memset(aucBufOut, 0x00, 43); // Clear out the response buffer
-        memset(aucBufIn, 0xCC, 43); // Clear out the response buffer
-
-        /* Send a BL Query Command */
-        aucBufOut[0] = 0; // Report ID, ignored
-        aucBufOut[1] = PCTransfer;
-        aucBufOut[2] = cmd;
-        
-        hid_write(phd, aucBufOut, 43);
-        int r = hid_read(phd, aucBufIn, 43);
-
-        if (r < 2) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: not enough data\n");
-            return false;
-        }
-        if (!ignoreFailures && aucBufIn[0] & PCRequestError) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: request error\n");
-            return false;
-        }
-        if (!ignoreFailures && !(aucBufIn[0] & PCTransfer)) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: Transfer error.\n");
-            return false;
-        }
-        if (ignoreFailures || aucBufIn[1] == (cmd|RequestDone)) {
-            dataOut.resize(r - 2);
-            memcpy(&dataOut[0], &aucBufIn[2], r - 2);
-            return true;
-        } else {
-            LogWarn(VB_PLUGIN, "Si4713/USB: Request not done.\n");
-        }
-        return false;
-    }
-    virtual bool sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &dataIn, std::vector<uint8_t> &dataOut, bool ignoreFailures) override {
-        unsigned char aucBufIn[43];
-        unsigned char aucBufOut[43];
-        memset(aucBufOut, 0x00, 43); // Clear out the response buffer
-        memset(aucBufIn, 0xCC, 43); // Clear out the response buffer
-        
-        /* Send a BL Query Command */
-        aucBufOut[0] = 0; // Report ID, ignored
-        aucBufOut[1] = PCTransfer;
-        aucBufOut[2] = RequestSi4711Access;
-        aucBufOut[3] = dataIn.size() + 1;
-        aucBufOut[4] = cmd;
-        memcpy(&aucBufOut[5], &dataIn[0], dataIn.size());
-
-        hid_write(phd, aucBufOut, 43);
-        int r = hid_read(phd, aucBufIn, 42);
-        /*
-        for (int x = 0; x < 25; x++) {
-            printf("%x ", aucBufIn[x]);
-        }
-        printf("\n");
-        */
-        if (!ignoreFailures && aucBufIn[2] != 1) {
-            LogWarn(VB_PLUGIN, "Si4711/USB: command failed (%d): %s, returned (FALSE)\n", aucBufIn[2], Si471xStatusStr(aucBufIn[2]));
-            //sometimes it timeoutes, but the CTS=0, so we must re-read this byte again.
-            //return false;
-        }
-        
-        if (!ignoreFailures && aucBufIn[3]!=SI4711_OK) {
-            LogWarn(VB_PLUGIN, "Si4711/USB: I2C_READ failed (%d): %s\n", aucBufIn[3], Si471xStatusStr(aucBufIn[3]));
-            return false;
-        }
-        
-        if(!ignoreFailures && aucBufIn[4] > 16) {
-            LogWarn(VB_PLUGIN, "Si4711/USB: I2C_READ failed, too much bytes received: %d\n", aucBufIn[4]);
-            return false;
-        }
-        
-        //LogDebug(VB_PLUGIN, "Si4711/USB: Volume: %d.%d (deviation: %d)\n", (int) aucBufIn[21], (int ) aucBufIn[22], (int ) (aucBufIn[23] << 8 | aucBufIn[24]));
-        //printf("Si4711/USB: Volume: %d.%d (deviation: %d)\n", (int ) aucBufIn[21], (int ) aucBufIn[22], (int ) (aucBufIn[23] << 8 | aucBufIn[24]));
-        //printf("datasize: %d\n", aucBufIn[4]);
-        int sz = 16; // aucBufIn[4]
-        dataOut.resize(sz);
-        memcpy(&dataOut[0], &aucBufIn[5], sz);
-        return true;
-    }
-    virtual bool setProperty(uint16_t prop, uint16_t val)  override {
-        unsigned char aucBufIn[43];
-        unsigned char aucBufOut[43];
-        memset(aucBufOut, 0x00, 43); // Clear out the response buffer
-        memset(aucBufIn, 0xCC, 43); // Clear out the response buffer
-        aucBufOut[0] = 0x00;            //report number, would be unused!
-        aucBufOut[1] = PCTransfer;      //
-        aucBufOut[2] = RequestSi4711SetProp;
-        aucBufOut[3] = prop >> 8;
-        aucBufOut[4] = prop;
-        aucBufOut[5] = val >> 8;
-        aucBufOut[6] = val;
-        hid_write(phd, aucBufOut, 43);
-        hid_read(phd, aucBufIn, 42);
-        
-        if (aucBufIn[0] & PCRequestError) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: request error for property %X.\n", prop);
-            return false;
-        }
-        
-        if (!(aucBufIn[1] & RequestDone)) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: request is not done!\n");
-            return false;
-        }
-        
-        if (aucBufIn[8]!=SI4711_OK) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: Device request \"%s\" failed (%d): %s\n", Si471xRequestStr(RequestSi4711SetProp), aucBufIn[2], Si471xStatusStr(aucBufIn[2]));
-            return false;
-        }
-        
-        if (aucBufIn[7] & STATUS_BIT_ERR) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: Answers: Error setting property 0x%04x to \"0x%04x\".\n", prop, val);
-            return false;
-        }
-        
-        if (!(aucBufIn[7] & STATUS_BIT_CTS)) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: Answers: NO CTS! When setting property 0x%04x.\n", prop);
-            return false;
-        }
-        
-        if (aucBufIn[6] != 1) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: Device request \"%s\" failed (%02x): %s (false!)\n", Si471xRequestStr(RequestSi4711SetProp), aucBufIn[6]);
-            return false;
-        }
-        return true;
-    }
-    virtual bool getProperty(uint16_t prop, uint16_t &val) override {
-        unsigned char aucBufIn[43];
-        unsigned char aucBufOut[43];
-        memset(aucBufOut, 0x00, 43); // Clear out the response buffer
-        memset(aucBufIn, 0xCC, 43); // Clear out the response buffer
-        aucBufOut[0] = 0x00;            //report number, would be unused!
-        aucBufOut[1] = PCTransfer;      //
-        aucBufOut[2] = RequestSi4711GetProp;
-        aucBufOut[3] = prop >> 8;
-        aucBufOut[4] = prop;
-        hid_write(phd, aucBufOut, 43);
-        hid_read(phd, aucBufIn, 42);
-
-        if (aucBufIn[0] & PCRequestError) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: request error for property %X.\n", prop);
-            return false;
-        }
-        
-        if (!(aucBufIn[1] & RequestDone)) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: request is not done!\n");
-            return false;
-        }
-        
-        if (aucBufIn[8]!=SI4711_OK) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: Device request \"%s\" failed (%d): %s\n", Si471xRequestStr(RequestSi4711SetProp), aucBufIn[2], Si471xStatusStr(aucBufIn[2]));
-            return false;
-        }
-        
-        if (aucBufIn[7] & STATUS_BIT_ERR) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: Answers: Error setting property 0x%04x to \"0x%04x\".\n", prop, val);
-            return false;
-        }
-        
-        if (!(aucBufIn[7] & STATUS_BIT_CTS)) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: Answers: NO CTS! When setting property 0x%04x.\n", prop);
-            return false;
-        }
-        
-        if (aucBufIn[6] != 1) {
-            LogWarn(VB_PLUGIN, "Si4713/USB: Device request \"%s\" failed (%02x): %s (false!)\n", Si471xRequestStr(RequestSi4711SetProp), aucBufIn[6]);
-            return false;
-        }
-        val = (int16_t ) ((aucBufIn[4] & 0x00FF) << 8) | aucBufIn[5];
-        return true;
-    }
-
-
-    hid_device *phd = nullptr;
-};
-
-
-Si4713::Si4713(uint16_t _usVID, uint16_t _usPID) {
-    connector = new USBSi4713Connector(_usVID, _usPID);
-    if (isOk()) {
-        Init();
-    }
+Si4713::Si4713() {
 }
 
 
 Si4713::~Si4713() {
-    if (connector) {
-        delete connector;
-    }
-}
-
-bool Si4713::isOk() {
-    return connector && connector->isOk();
 }
 
 
@@ -392,52 +102,8 @@ void Si4713::Init() {
     setProperty(SI4713_PROP_TX_ATTACK_TIME, 0); // 0.5 ms
     setProperty(SI4713_PROP_TX_RELEASE_TIME, 4); // 1000 ms
     setProperty(SI4713_PROP_TX_ACOMP_GAIN, 5); // dB
-    
-    powerUp();
-}
-bool Si4713::sendDeviceCommand(uint8_t cmd, bool ignoreFailures) {
-    std::vector<uint8_t> out;
-    return connector->sendDeviceCommand(cmd, out, ignoreFailures);
-}
-bool Si4713::sendDeviceCommand(uint8_t cmd, std::vector<uint8_t> &out, bool ignoreFailures) {
-    return connector->sendDeviceCommand(cmd, out, ignoreFailures);
-}
-bool Si4713::setProperty(uint16_t prop, uint16_t val) {
-    return connector->setProperty(prop, val);
-}
-bool Si4713::getProperty(uint16_t prop, uint16_t &val) {
-    return connector->getProperty(prop, val);
 }
 
-bool Si4713::sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &data, bool ignoreFailures) {
-    std::vector<uint8_t> out;
-    return connector->sendSi4711Command(cmd, data, out, ignoreFailures);
-}
-bool Si4713::sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &data, std::vector<uint8_t> &out, bool ignoreFailures) {
-    return connector->sendSi4711Command(cmd, data, out, ignoreFailures);
-}
-
-void Si4713::powerUp() {
-    sendDeviceCommand(RequestSi4711PowerUp, true);
-}
-void Si4713::powerDown() {
-    sendDeviceCommand(RequestSi4711PowerDown, true);
-}
-void Si4713::reset() {
-    sendDeviceCommand(RequestSi4711Reset, true);
-}
-
-std::string Si4713::getRev() {
-    std::vector<uint8_t> out;
-    sendSi4711Command(0x10, {0}, out);
-    
-    if (sendDeviceCommand(RequestCpuId, out)) {
-        std::string rev = (char*)(&out[3]);
-        std::string board = (char*)(&out[5 + rev.size()]);
-        return board + " - " + rev;
-    }
-    return "";
-}
 
 void Si4713::setFrequency(int frequency) {
     uint8_t ft = frequency>>8;
@@ -450,48 +116,10 @@ void Si4713::setTXPower(int power, double antCap) {
     sendSi4711Command(TX_TUNE_POWER, {0x00, 0x00, p, rfcap0});
 }
 
-
-std::string Si4713::getASQ() {
+bool Si4713::sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &data, bool ignoreFailures) {
     std::vector<uint8_t> out;
-    if (sendDeviceCommand(RequestSi4711AsqStatus, out)) {
-        std::string r = "ASQ Flags: ";
-        r += std::to_string(out[1])  + " " +  std::to_string(out[2]) + " " +  std::to_string(out[3]);
-        r += "  - InLevel:";
-        int lev = out[4];
-        if (lev > 127) {
-            lev -= 256;
-        }
-        r += std::to_string(lev);
-        r += " dBfs";
-        return r;
-    }
-    return "";
+    return sendSi4711Command(cmd, data, out, ignoreFailures);
 }
-std::string Si4713::getTuneStatus() {
-    std::vector<uint8_t> out;
-    if (sendDeviceCommand(RequestSi4711TuneStatus, out)) {
-        int currFreq = out[1] << 8 | out[2];
-        int currdBuV = out[3];
-        int currAntCap = out[4];
-        
-        float f = currFreq / 100.0f;
-        float cap = ((float)currAntCap) * 0.25f;
-        
-        std::string r = "Freq:" + std::to_string(f)
-            + " MHz - Power:" + std::to_string(currdBuV)
-            + "dBuV - ANTcap:" + std::to_string(cap);
-        return r;
-    }
-    return "";
-}
-
-void Si4713::enableAudio() {
-    sendDeviceCommand(RequestSi4711AudioEnable);
-}
-void Si4713::disableAudio() {
-    sendDeviceCommand(RequestSi4711AudioDisable);
-}
-
 
 void Si4713::beginRDS() {
     //66.25KHz (default is 68.25)
@@ -506,13 +134,15 @@ void Si4713::beginRDS() {
     // 50% mix (default)
     setProperty(SI4713_PROP_TX_RDS_PS_MIX, 0x03);
     //  RDSD0 & RDSMS (default)
-    setProperty(SI4713_PROP_TX_RDS_PS_MISC, 0x1008  | (pty << 5));
+    int i = (0x1848 & 0xFB1F) | (pty << 5);
+    uint16_t i2 = i;
+    setProperty(SI4713_PROP_TX_RDS_PS_MISC, i);
     // 3 repeats (default)
     setProperty(SI4713_PROP_TX_RDS_PS_REPEAT_COUNT, 3);
     
     setProperty(SI4713_PROP_TX_RDS_MESSAGE_COUNT, 1);
     setProperty(SI4713_PROP_TX_RDS_PS_AF, 0xE0E0); // no AF
-    setProperty(SI4713_PROP_TX_RDS_FIFO_SIZE, 7);
+    setProperty(SI4713_PROP_TX_RDS_FIFO_SIZE, 0);
     
     setProperty(SI4713_PROP_TX_COMPONENT_ENABLE, 0x0007);
 }
@@ -536,12 +166,14 @@ void Si4713::setRDSStation(const std::vector<std::string> &station) {
             buf[x] = a[x];
         }
         for (uint8_t i = 0; i < 2; i++) {
-            sendSi4711Command(TX_RDS_PS, {idx, buf[i*4], buf[(i*4)+1], buf[(i*4)+2], buf[(i*4)+3]});
+            sendSi4711Command(TX_RDS_PS, {idx, buf[i*4], buf[(i*4)+1], buf[(i*4)+2], buf[(i*4)+3], 0});
             idx++;
         }
     }
 }
-void Si4713::setRDSBuffer(const std::string &station) {
+void Si4713::setRDSBuffer(const std::string &station,
+                          int artistPos, int artistLen,
+                          int titlePos, int titleLen) {
     if (lastRDS == station) {
         return;
     }
@@ -565,8 +197,6 @@ void Si4713::setRDSBuffer(const std::string &station) {
         }
     }
 
-    std::vector<uint8_t> out;
-    sendSi4711Command(TX_RDS_BUFF, {TX_RDS_BUFF_IN_MTBUFF, 0, 0, 0, 0, 0, 0}, out);
     if (station.size() != 0) {
         int count = (sl + 3) / 4;
         //printf("%d,   %s\n", count, station.c_str());
@@ -575,22 +205,17 @@ void Si4713::setRDSBuffer(const std::string &station) {
             if (i == 0) {
                 sb |= TX_RDS_BUFF_IN_MTBUFF;
             }
-            sendSi4711Command(TX_RDS_BUFF, {sb, 0x20, i, buf[i*4], buf[(i*4)+1], buf[(i*4)+2], buf[(i*4)+3]}, out);
-            
-            if (out.size() < 8) {
-                out.resize(8);
-            }
-            //printf("bu out %d:  %2X %2X %2X %2X %2X %2X %2X %2X\n", i, out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7]);
+            sendSi4711Command(TX_RDS_BUFF, {sb, 0x20, i, buf[i*4], buf[(i*4)+1], buf[(i*4)+2], buf[(i*4)+3], 0});
         }
-        //sendRtPlusInfo(1, 0, 10, 4, 11, sl - 11);
+        sendRtPlusInfo(1, titlePos, titleLen, 4, artistPos, artistLen);
+    } else {
+        sendSi4711Command(TX_RDS_BUFF, {TX_RDS_BUFF_IN_MTBUFF, 0, 0, 0, 0, 0, 0});
     }
     sendTimestamp();
 
     setProperty(SI4713_PROP_TX_COMPONENT_ENABLE, 0x0007);
-    sendSi4711Command(0x14, {}, out);
-    //printf("0x14 out:  %2X %2X %2X %2X %2X %2X %2X %2X\n", out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7]);
-    sendSi4711Command(TX_RDS_BUFF, {TX_RDS_BUFF_IN_INTACK, 0, 0, 0, 0, 0, 0}, out);
-    //printf("int ack out:  %2X %2X %2X %2X %2X %2X %2X %2X\n", out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7]);
+    sendSi4711Command(0x14, {});
+    sendSi4711Command(TX_RDS_BUFF, {TX_RDS_BUFF_IN_INTACK, 0, 0, 0, 0, 0, 0});
 }
 
 
@@ -602,7 +227,6 @@ void Si4713::sendRtPlusInfo(int content1, int content1_pos, int content1_len,
     char msg[6];
 
     if (content1_len || content2_len) {
-    
     
         memset (msg, 0x00, 6);
         bitstream_t *bs = nullptr;
@@ -626,11 +250,9 @@ void Si4713::sendRtPlusInfo(int content1, int content1_pos, int content1_len,
             bs_put(bs, content2_len, 5);    //length marker 2 (5 bits!)
         }
     
-        std::vector<uint8_t> out;
         sendSi4711Command(TX_RDS_BUFF, {TX_RDS_BUFF_IN_LDBUFF,
                         RTPLUS_GROUP_ID << 4,
-            msg[0], msg[1], msg[2], msg[3], msg[4]}, out);
-        printf("RTPLUS Settings:  %2X %2X %2X %2X %2X %2X %2X %2X\n", out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7]);
+                        msg[0], msg[1], msg[2], msg[3], msg[4]});
 
         //send RT+ announces
         //  FmRadioController::HandleRDSData
@@ -648,8 +270,7 @@ void Si4713::sendRtPlusInfo(int content1, int content1_pos, int content1_len,
                //zzzz - for rds server needs.
             0, //template id=0
             0x4B, 0xD7 //it's RT+
-        }, out);
-        printf("RTPLUS Group:  %2X %2X %2X %2X %2X %2X %2X %2X\n", out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7]);
+        });
     }
 }
 
