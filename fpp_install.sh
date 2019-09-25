@@ -8,4 +8,6 @@ if ! dpkg --get-selections | grep -cq libusb-1.0-0-dev; then
 	sudo apt-get -q -y --reinstall install libusb-1.0-0-dev
 fi
 
+make
+
 popd
