@@ -33,7 +33,7 @@ I2C connection requires a GPIO pin to reset the Si4713.  Can either be a kernal 
 <div id="VASTFMTPluginsettings" class="settings">
 <fieldset>
 <legend>VAST-FMT/Si4713 Plugin Settings</legend>
-<p>Start at: <?php PrintSettingSelect("Start", "Start", 1, 0, "FPPDStart", Array("FPPD Start (default)"=>"FPPDStart", "Playlist Start"=>"PlaylistStart", "Never"=>"Never"), "fpp-vastfmt", ""); ?><br />
+<p>Start at: <?php PrintSettingSelect("Start", "Start", 1, 0, "FPPDStart", Array("FPPD Start (default)"=>"FPPDStart", "Playlist Start"=>"PlaylistStart", "Never - RDS Only"=>"RDSOnly", "Never"=>"Never"), "fpp-vastfmt", ""); ?><br />
 At Start, the hardware is reset, FM settings initialized, will broadcast any audio played, and send static RDS messages (if enabled).</p>
 <p>Stop at: <?php PrintSettingSelect("Stop", "Stop", 1, 0, "Never", Array("Playlist Stop"=>"PlaylistStop", "Never (default)"=>"Never"), "fpp-vastfmt", ""); ?><br />
 At Stop, the hardware is reset. Listeners will hear static.</p>

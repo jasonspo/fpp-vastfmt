@@ -41,6 +41,8 @@ public:
         setDefaultSettings();
         if (settings["Start"] == "FPPDStart") {
             startVast();
+        } else if (settings["Start"] == "RDSOnly") {
+            startVastForRDS();
         }
     }
     virtual ~FPPVastFMPlugin() {
@@ -50,20 +52,43 @@ public:
             si4713 = nullptr;
         }
     }
+
+    bool initVast() {
+        if (si4713 != nullptr) {
+            delete si4713;
+            si4713 = nullptr;
+        }
+
+        if (settings["Connection"] == "I2C") {
+            si4713 = new I2CSi4713(settings["ResetPin"]);
+        } else {
+            si4713 = new VASTFMT();
+        }
+        if (si4713->isOk()) {
+            si4713->Init();
+
+            std::string rev = si4713->getRev();
+            LogInfo(VB_PLUGIN, "VAST-FMT: %s\n", rev.c_str());
+
+            return true;
+        }
+
+        delete si4713;
+        si4713 = nullptr;
+
+        return false;
+    }
+
+    void initRDS() {
+        LogInfo(VB_PLUGIN, "Enabling RDS\n");
+        si4713->beginRDS();
+        formatAndSendText(settings["StationText"], "", "", true);
+        formatAndSendText(settings["RDSTextText"], "", "", false);
+    }
     
     void startVast() {
         if (si4713 == nullptr) {
-            if (settings["Connection"] == "I2C") {
-                si4713 = new I2CSi4713(settings["ResetPin"]);
-            } else {
-                si4713 = new VASTFMT();
-            }
-            if (si4713->isOk()) {
-                si4713->Init();
-                
-                std::string rev = si4713->getRev();
-                LogInfo(VB_PLUGIN, "VAST-FMT: %s\n", rev.c_str());
-                
+            if (initVast()) {
                 if (settings["Preemphasis"] == "50us") {
                     si4713->setEUPreemphasis();
                 }
@@ -83,17 +108,21 @@ public:
                 
                 std::string ts = si4713->getTuneStatus();
                 LogInfo(VB_PLUGIN, "VAST-FMT: %s\n", ts.c_str());
-                
+
                 if (settings["EnableRDS"] == "True") {
-                    printf("Enabling RDS\n");
-                    si4713->beginRDS();
-                    formatAndSendText(settings["StationText"], "", "", true);
-                    formatAndSendText(settings["RDSTextText"], "", "", false);
+                    initRDS();
                 }
             }
-            if (!si4713->isOk()) {
-                delete si4713;
-                si4713 = nullptr;
+        }
+    }
+    void startVastForRDS() {
+        if (si4713 == nullptr) {
+            if (initVast()) {
+                if (settings["EnableRDS"] == "True") {
+                    initRDS();
+                } else {
+                    LogErr(VB_PLUGIN, "Tried to setup for RDS, but RDS is not enabled\n");
+                }
             }
         }
     }
@@ -110,6 +139,10 @@ public:
         
         int artistIdx = -1;
         int titleIdx = -1;
+
+        if (!si4713)
+            return;
+
         for (int x = 0; x < text.length(); x++) {
             if (text[x] == '[') {
                 if (artist == "" && title == "") {
@@ -139,7 +172,7 @@ public:
             }
         }
         if (station) {
-            LogDebug(VB_PLUGIN, "Setting RDS Station text to %s\n", output.c_str());
+            LogDebug(VB_PLUGIN, "Setting RDS Station text to \"%s\"\n", output.c_str());
             std::vector<std::string> fragments;
             while (output.size()) {
                 if (output.size() <= 8) {
@@ -159,7 +192,7 @@ public:
             }
             si4713->setRDSStation(fragments);
         } else {
-            LogDebug(VB_PLUGIN, "Setting RDS text to %s\n", output.c_str());
+            LogDebug(VB_PLUGIN, "Setting RDS text to \"%s\"\n", output.c_str());
             si4713->setRDSBuffer(output, artistIdx, artist.length(), titleIdx, title.length());
         }
     }
