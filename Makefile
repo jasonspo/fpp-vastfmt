@@ -10,7 +10,7 @@ LIBS_fpp_vastfmt_so += -L/opt/fpp/src -lfpp -lusb-1.0
 CXXFLAGS_src/FPPVastFM.o += -I/opt/fpp/src
 
 
-%.o: %.cpp Makefile
+%.o: %.cpp Makefile /usr/include/libusb-1.0/libusb.h
 	$(CCACHE) $(CC) $(CFLAGS) $(CXXFLAGS) $(CXXFLAGS_$@) -c $< -o $@
 
 %.o: %.c Makefile
@@ -21,3 +21,8 @@ libfpp-vastfmt.so: $(OBJECTS_fpp_vastfmt_so) /opt/fpp/src/libfpp.so
 
 clean:
 	rm -f libfpp-vastfmt.so $(OBJECTS_fpp_vastfmt_so)
+
+
+/usr/include/libusb-1.0/libusb.h:
+	sudo apt-get -q -y update
+	sudo apt-get -q -y --reinstall install libusb-1.0-0-dev

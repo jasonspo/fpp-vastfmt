@@ -123,10 +123,10 @@ bool VASTFMT::sendDeviceCommand(uint8_t cmd, std::vector<uint8_t> &dataOut, bool
     aucBufOut[2] = cmd;
     
     hid_write(phd, aucBufOut, 43);
-    int r = hid_read(phd, aucBufIn, 43);
+    int r = hid_read_timeout(phd, aucBufIn, 43, 250);
 
     if (r < 2) {
-        LogWarn(VB_PLUGIN, "Si4713/USB: not enough data\n");
+        LogWarn(VB_PLUGIN, "Si4713/USB: not enough data: %d\n", r);
         return false;
     }
     if (!ignoreFailures && aucBufIn[0] & PCRequestError) {
@@ -163,7 +163,11 @@ bool VASTFMT::sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &dataIn,
     }
 
     hid_write(phd, aucBufOut, 43);
-    int r = hid_read(phd, aucBufIn, 42);
+    int r = hid_read_timeout(phd, aucBufIn, 42, 250);
+    if (r == 0) {
+        LogWarn(VB_PLUGIN, "Si4711/USB: command timed out (%d): %s, returned (FALSE)\n", aucBufIn[2], Si471xStatusStr(aucBufIn[2]));
+        return false;
+    }
     /*
     printf("CMD:  %2x    Read: %d\n", cmd, r);
     for (int x = 0; x < 25; x++) {
@@ -208,7 +212,12 @@ bool VASTFMT::setProperty(uint16_t prop, uint16_t val) {
     aucBufOut[5] = val >> 8;
     aucBufOut[6] = val;
     hid_write(phd, aucBufOut, 43);
-    hid_read(phd, aucBufIn, 42);
+    int r = hid_read_timeout(phd, aucBufIn, 42, 250);
+    if (r == 0) {
+        LogWarn(VB_PLUGIN, "Si4711/USB: request error for property %X - timeout.\n", prop);
+        return false;
+    }
+
     
     if (aucBufIn[0] & PCRequestError) {
         LogWarn(VB_PLUGIN, "Si4713/USB: request error for property %X.\n", prop);
@@ -252,7 +261,12 @@ bool VASTFMT::getProperty(uint16_t prop, uint16_t &val) {
     aucBufOut[3] = prop >> 8;
     aucBufOut[4] = prop;
     hid_write(phd, aucBufOut, 43);
-    hid_read(phd, aucBufIn, 42);
+    int r = hid_read_timeout(phd, aucBufIn, 42, 250);
+    if (r == 0) {
+        LogWarn(VB_PLUGIN, "Si4713/USB: request error for property %X - timeout.\n", prop);
+        return false;
+    }
+    
 
     if (aucBufIn[0] & PCRequestError) {
         LogWarn(VB_PLUGIN, "Si4713/USB: request error for property %X.\n", prop);
