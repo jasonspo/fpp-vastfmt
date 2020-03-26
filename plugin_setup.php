@@ -54,6 +54,7 @@ I2C connection requires a GPIO pin to reset/enable the Si4713.</p>
 At Start, the hardware is reset, FM settings initialized, will broadcast any audio played, and send static RDS messages (if enabled).</p>
 <p>Stop at: <?php PrintSettingSelect("Stop", "Stop", 2, 0, "Never", Array("Playlist Stop"=>"PlaylistStop", "Never (default)"=>"Never"), "fpp-vastfmt", ""); ?><br />
 At Stop, the hardware is reset. Listeners will hear static.</p>
+<p>Enable Volume Change Hack for Vast-FMT 212R: <?php PrintSettingCheckbox("EnableVolumeChangeHack", "EnableVolumeChangeHack", 2, 0, "1", "0", "fpp-vastfmt", ""); ?></p>
 </fieldset>
 </div>
 

@@ -5,6 +5,7 @@
 #include <termios.h>
 
 #include "mediadetails.h"
+#include "commands/Commands.h"
 #include "common.h"
 #include "settings.h"
 #include "Plugin.h"
@@ -120,7 +121,8 @@ public:
     void startVastForRDS() {
         if (si4713 == nullptr) {
             if (initVast()) {
-                if (settings["EnableRDS"] == "True") {
+                rdsEnabled = settings["EnableRDS"] == "True";
+                if (rdsEnabled) {
                     initRDS();
                 } else {
                     LogErr(VB_PLUGIN, "Tried to setup for RDS, but RDS is not enabled\n");
@@ -221,6 +223,21 @@ public:
         std::string album = mediaDetails.album;
         int track = mediaDetails.track;
         int length = mediaDetails.length;
+
+        // Bump the volume down and back up to work around Vast-FMT 212R issue
+        if (settings["EnableVolumeChangeHack"] == "1") {
+            Json::Value cmd;
+            Json::Value args(Json::arrayValue);
+
+            args.append("5");
+            cmd["args"] = args;
+
+            cmd["command"] = "Volume Decrease";
+            CommandManager::INSTANCE.run(cmd);
+
+            cmd["command"] = "Volume Increase";
+            CommandManager::INSTANCE.run(cmd);
+        }
         
         std::string type = playlist["currentEntry"]["type"].asString();
         if (type != "both" && type != "media") {
@@ -245,6 +262,7 @@ public:
         setIfNotFound("Pty", "2");
         
         setIfNotFound("Connection", "USB");
+        setIfNotFound("EnableVolumeChangeHack", "0");
 #ifdef PLATFORM_BBB
         setIfNotFound("ResetPin", "14");
 #else
