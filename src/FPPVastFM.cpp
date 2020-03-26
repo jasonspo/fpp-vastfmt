@@ -37,6 +37,7 @@ static void padTo(std::string &s, int l) {
 class FPPVastFMPlugin : public FPPPlugin {
 public:
     bool enabled = true;
+    bool rdsEnabled = false;
     FPPVastFMPlugin() : FPPPlugin("fpp-vastfmt") {
         setDefaultSettings();
         if (settings["Start"] == "FPPDStart") {
@@ -109,7 +110,8 @@ public:
                 std::string ts = si4713->getTuneStatus();
                 LogInfo(VB_PLUGIN, "VAST-FMT: %s\n", ts.c_str());
 
-                if (settings["EnableRDS"] == "True") {
+                rdsEnabled = settings["EnableRDS"] == "True";
+                if (rdsEnabled) {
                     initRDS();
                 }
             }
@@ -199,7 +201,7 @@ public:
     
 
     virtual void playlistCallback(const Json::Value &playlist, const std::string &action, const std::string &section, int item) {
-        if (action == "stop") {
+        if (action == "stop" && rdsEnabled) {
             formatAndSendText(settings["StationText"], "", "", true);
             formatAndSendText(settings["RDSTextText"], "", "", false);
         }
@@ -211,6 +213,9 @@ public:
         
     }
     virtual void mediaCallback(const Json::Value &playlist, const MediaDetails &mediaDetails) {
+        if (!rdsEnabled) {
+            return;
+        }
         std::string title = mediaDetails.title;
         std::string artist = mediaDetails.artist;
         std::string album = mediaDetails.album;
@@ -252,6 +257,7 @@ public:
         } else if (!emptyAllowed && settings[s] == "") {
             settings[s] = v;
         }
+        LogDebug(VB_PLUGIN, "Setting \"%s\": \"%s\"\n", s.c_str(), settings[s].c_str());
     }
     
     Si4713 *si4713 = nullptr;

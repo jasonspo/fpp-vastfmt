@@ -1,8 +1,8 @@
 {
 	"repoName": "fpp-vastfmt",
-	"name": "Vast V-FMT212R/Si4713",
+	"name": "Si4713/Vast V-FMT212R",
 	"author": "Daniel Kulp",
-	"description": "Basic RDS/Audio support for the Vast Electronics V-FMT212R USB FM Transmitter and Si4713 I2C modules",
+	"description": "RDS/Audio support for the Vast Electronics V-FMT212R USB FM Transmitter and Si4713 I2C modules",
 	"homeURL": "https://github.com/FalconChristmas/fpp-vastfmt",
 	"srcURL": "https://github.com/FalconChristmas/fpp-vastfmt.git",
 	"bugURL": "https://github.com/FalconChristmas/fpp-vastfmt/issues",
@@ -30,10 +30,17 @@
         },
         {
             "minFPPVersion": "3.3",
+            "maxFPPVersion": "3.99",
+            "branch": "master",
+            "sha": "8d3589395ae7615148ce7a29311408e1533ea423",
+            "allowUpdates": 0
+        },
+        {
+            "minFPPVersion": "4.0",
             "maxFPPVersion": "0",
             "branch": "master",
             "sha": "",
-            "allowUpdates": 0
+            "allowUpdates": 1
         }
 	]
 }
