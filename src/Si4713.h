@@ -34,6 +34,10 @@ public:
                       int titlePos, int titleLen);
     void sendTimestamp();
 
+    void enableAudioCompression(bool b = true) { audioCompression = b; }
+    void enableAudioLimitter(bool b = true) { audioLimitter = b; }
+    void setAudioGain(int i) {audioGain = i;}
+    void setAudioCompressionThreshold(int i) { audioCompressionThreshold = i;}
 private:
     void sendRtPlusInfo(int content1, int content1_pos, int content1_len,
                         int content2, int content2_pos, int content2_len);
@@ -47,6 +51,11 @@ private:
     int pty = 2;
     std::vector<std::string> lastStation;
     std::string lastRDS;
+    
+    bool audioCompression = true;
+    bool audioLimitter = true;
+    int audioGain = 5;
+    int audioCompressionThreshold = -15;
 };
 
 #endif

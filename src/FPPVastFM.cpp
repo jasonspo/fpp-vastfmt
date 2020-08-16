@@ -67,6 +67,11 @@ public:
             si4713 = new VASTFMT();
         }
         if (si4713->isOk()) {
+            si4713->enableAudioCompression(settings["AudioCompression"] == "True");
+            si4713->enableAudioLimitter(settings["AudioLimitter"] == "True");
+            si4713->setAudioGain(std::stoi(settings["AudioGain"]));
+            si4713->setAudioCompressionThreshold(std::stoi(settings["AudioCompressionThreshold"]));
+
             si4713->Init();
 
             std::string rev = si4713->getRev();
@@ -268,6 +273,10 @@ public:
 #else
         setIfNotFound("ResetPin", "4");
 #endif
+        setIfNotFound("AudioCompression", "True");
+        setIfNotFound("AudioLimitter", "True");
+        setIfNotFound("AudioGain", "5");
+        setIfNotFound("AudioCompressionThreshold", "-15");
     }
     void setIfNotFound(const std::string &s, const std::string &v, bool emptyAllowed = false) {
         if (settings.find(s) == settings.end()) {

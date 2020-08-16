@@ -68,6 +68,10 @@ At Stop, the hardware is reset. Listeners will hear static.</p>
 <br /><sup>*</sup>Can be set as high as 120dB&mu;V, but voltage accuracy above 115dB&mu;V is not guaranteed.</p>
 <p>Preemphasis: <?php PrintSettingSelect("Preemphasis", "Preemphasis", 2, 0, "75us", Array("50&mu;s (Europe, Australia, Japan)"=>"50us", "75&mu;s (USA, default)"=>"75us"), "fpp-vastfmt", ""); ?></p>
 <p>Antenna Tuning Capacitor (0=Auto, 1-191): <?php PrintSettingTextSaved("AntCap", 2, 0, 3, 3, "fpp-vastfmt", "0"); ?> * 0.25pF </p>
+<p>Enable Audio Limitter: <?php PrintSettingCheckbox("AudioLimitter", "AudioLimitter", 2, 0, "True", "False", "fpp-vastfmt", "", "True"); ?></p>
+<p>Enable Audio Compression: <?php PrintSettingCheckbox("AudioCompression", "AudioCompression", 2, 0, "True", "False", "fpp-vastfmt", "", "True"); ?></p>
+<p>Audio Compression Threshold (-64 - 0 db): <?php PrintSettingTextSaved("AudioCompressionThreshold", 2, 0, 3, 3, "fpp-vastfmt", "-15"); ?></p>
+<p>Audio Gain (0 - 16): <?php PrintSettingTextSaved("AudioGain", 2, 0, 3, 3, "fpp-vastfmt", "5"); ?></p>
 </fieldset>
 </div>
 

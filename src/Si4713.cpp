@@ -94,12 +94,16 @@ void Si4713::Init() {
     std::string rev = getRev();
     //setProperty(SI4713_PROP_REFCLK_FREQ, 32768); // crystal is 32.768
     setProperty(SI4713_PROP_TX_PREEMPHASIS, isEUPremphasis ? 1 : 0); // 75uS pre-emph (default for US)
-    setProperty(SI4713_PROP_TX_ACOMP_ENABLE, 0x03); // turn on limiter and AGC
     
-    setProperty(SI4713_PROP_TX_ACOMP_THRESHOLD, 0x10000-15); // -15 dBFS
+    uint16_t t = audioCompression ? 0x1 : 0;
+    if (audioLimitter) {
+        t |= 0x2;
+    }
+    setProperty(SI4713_PROP_TX_ACOMP_ENABLE, t); // turn on limiter and AGC
+    setProperty(SI4713_PROP_TX_ACOMP_THRESHOLD, 0x10000 + audioCompressionThreshold);
     setProperty(SI4713_PROP_TX_ATTACK_TIME, 0); // 0.5 ms
     setProperty(SI4713_PROP_TX_RELEASE_TIME, 4); // 1000 ms
-    setProperty(SI4713_PROP_TX_ACOMP_GAIN, 5); // dB
+    setProperty(SI4713_PROP_TX_ACOMP_GAIN, audioGain); // dB
 }
 
 
@@ -307,7 +311,7 @@ void Si4713::sendTimestamp() {
         offset = abs(offset) & 0x1F;
     }
     
-    uint8_t sb = TX_RDS_BUFF_IN_LDBUFF | TX_RDS_BUFF_IN_FIFO;
+    uint8_t sb = TX_RDS_BUFF_IN_LDBUFF;// | TX_RDS_BUFF_IN_FIFO;
     std::vector<uint8_t> out(6);
     
     uint8_t arg1 = (MJD >> 15);
