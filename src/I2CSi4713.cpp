@@ -1,9 +1,5 @@
 
-#include <unistd.h>
-#include <cstring>
-#include <sys/time.h>
-
-#include "log.h"
+#include "fpp-pch.h"
 
 #include "I2CSi4713.h"
 
@@ -46,15 +42,15 @@ I2CSi4713::I2CSi4713(const std::string &gpioPin) {
     }
     resetPin->configPin("gpio", "out");
     resetPin->setValue(1);
-    usleep(200000);
+    std::this_thread::sleep_for(std::chrono::microseconds(200000));
     resetPin->setValue(0);
-    usleep(200000);
+    std::this_thread::sleep_for(std::chrono::microseconds(200000));
     resetPin->setValue(1);
-    usleep(300000);
+    std::this_thread::sleep_for(std::chrono::microseconds(300000));
     i2c = new I2CUtils(I2CBUS, 0x63);
     if (i2c->isOk()) {
         sendSi4711Command(SI4710_CMD_POWER_UP, {0x12, 0x50});
-        usleep(500000);
+        std::this_thread::sleep_for(std::chrono::microseconds(200000));
         setProperty(SI4713_PROP_REFCLK_FREQ, 32768);
     } else {
         delete i2c;
@@ -128,9 +124,40 @@ std::string I2CSi4713::getTuneStatus() {
     return r;
 }
 bool I2CSi4713::sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &data, bool ignoreFailures) {
-    //printf("Sending command %X    datasize: %d\n", cmd, data.size());
+    LogDebug(VB_PLUGIN, "Sending command %X    datasize: %d (no resp)(if: %d)\n", cmd, data.size(), ignoreFailures);
     int i = i2c->writeBlockData(cmd, &data[0], data.size());
-    usleep(10000);
+    std::this_thread::sleep_for(std::chrono::microseconds(10000));
+    uint8_t out[1];
+    i = i2c->readI2CBlockData(0x00, out, 1);
+
+    if (cmd == SI4710_CMD_POWER_UP || cmd == SI4710_CMD_TX_TUNE_FREQ) {
+        for (int x = 0; x < 100; x++) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(3));
+            int i2 = i2c->writeBlockData(SI4710_CMD_GET_INT_STATUS, &data[0], 0);
+            i2 = i2c->readI2CBlockData(0x00, out, 1);
+            LogExcess(VB_PLUGIN, "   resp %X\n", (int)out[0]);
+            if (cmd == SI4710_CMD_POWER_UP) {
+                if (i2 > 0 && out[0] & 0x80) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+                    return true;
+                }
+            } else {
+                if (i2 > 0 && out[0] & 0x1) {
+                    return true;
+                }
+            }
+        }
+    } else if (SI4710_CMD_GET_INT_STATUS == 0x14 && !(out[0] & 0x80)) {
+        for (int x = 0; x < 10; x++) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(3));
+            int i2 = i2c->writeBlockData(SI4710_CMD_GET_INT_STATUS, &data[0], 0);
+            i2 = i2c->readI2CBlockData(0x00, out, 1);
+            LogExcess(VB_PLUGIN, "   resp %X\n", (int)out[0]);
+            if (out[0] & 0x80) {
+                return true;
+            }
+        }
+    }
     if (ignoreFailures || i >= 0) {
         return true;
     }
@@ -138,34 +165,41 @@ bool I2CSi4713::sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &data,
 }
 
 bool I2CSi4713::sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &data, std::vector<uint8_t> &out, bool ignoreFailures) {
-    //printf("Sending command %X    datasize: %d     toRead:  %d\n", cmd, data.size(), out.size());
+    LogDebug(VB_PLUGIN, "Sending command %X    datasize: %d     toRead:  %d   if: %d\n", cmd, data.size(), out.size(), ignoreFailures);
     int i = i2c->writeBlockData(cmd, &data[0], data.size());
     if (!ignoreFailures && i < 0) {
         return false;
     }
-    usleep(10000);
+    std::this_thread::sleep_for(std::chrono::microseconds(10000));
     if (out.size()) {
-        usleep(10000);
-        i2c->readI2CBlockData(0x00, &out[0], out.size());
-        //printf("    read  %d\n", i);
+        i = i2c->readI2CBlockData(0x00, &out[0], out.size());
+        LogExcess(VB_PLUGIN, "   read1 %d\n", i);
+    } else {
+        uint8_t b[1];
+        i = i2c->readI2CBlockData(0x00, &b[0], 1);
+        LogExcess(VB_PLUGIN, "   read2 %d   %X\n", i, (int)b[0]);
     }
     return false;
 }
 
 
 bool I2CSi4713::setProperty(uint16_t prop, uint16_t val) {
-    //printf("Set property: %X  val: %X\n", prop, val);
-    unsigned char aucBuf[20];
-    memset(aucBuf, 0x00, 20);
+    LogDebug(VB_PLUGIN, "Set property: %X  val: %X\n", prop, val);
+    std::vector<uint8_t> aucBuf(5);
     aucBuf[0] = 0x00;
     aucBuf[1] = prop >> 8;
     aucBuf[2] = prop;
     aucBuf[3] = val >> 8;
     aucBuf[4] = val;
-    int i = i2c->writeBlockData(SI4710_CMD_SET_PROPERTY, aucBuf, 5) >= 0;
-    if (i == -1) {
-        printf("Failed property: %X  %X\n", prop, val);
+    
+    std::vector<uint8_t> retBuf(1);
+
+    bool b = sendSi4711Command(SI4710_CMD_SET_PROPERTY, aucBuf, retBuf, false);
+    int i = retBuf[0];
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    if (!(retBuf[0] & 0x80)) {
+        LogWarn(VB_PLUGIN, "Failed to set property: %X  val: %X\n", prop, val);
+        return false;
     }
-    usleep(1000);
-    return i;
+    return b;
 }
