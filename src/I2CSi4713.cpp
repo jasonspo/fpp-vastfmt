@@ -118,10 +118,9 @@ std::string I2CSi4713::getTuneStatus() {
     
     float f = currFreq / 100.0f;
     
-    std::string r = "Freq:" + std::to_string(f)
-        + " MHz - Power:" + std::to_string(currdBuV)
-        + "dBuV - ANTcap:" + std::to_string(currAntCap);
-    return r;
+    char buf[100];
+    sprintf(buf, "Freq: %.1f MHz  -  Power: %d dBuV  -  ANTcap: %d", f, currdBuV, currAntCap);
+    return buf;
 }
 bool I2CSi4713::sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &data, bool ignoreFailures) {
     LogDebug(VB_PLUGIN, "Sending command %X    datasize: %d (no resp)(if: %d)\n", cmd, data.size(), ignoreFailures);
@@ -159,8 +158,10 @@ bool I2CSi4713::sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &data,
         }
     }
     if (ignoreFailures || i >= 0) {
+        LogExcess(VB_PLUGIN, "   resp2 %d,  %X\n", i, (int)out[0]);
         return true;
     }
+    LogExcess(VB_PLUGIN, "   Failed: %d\n", i);
     return false;
 }
 
@@ -173,13 +174,17 @@ bool I2CSi4713::sendSi4711Command(uint8_t cmd, const std::vector<uint8_t> &data,
     std::this_thread::sleep_for(std::chrono::microseconds(10000));
     if (out.size()) {
         i = i2c->readI2CBlockData(0x00, &out[0], out.size());
-        LogExcess(VB_PLUGIN, "   read1 %d\n", i);
+        LogExcess(VB_PLUGIN, "   read1 %d   %X\n", i, (int)out[0]);
     } else {
         uint8_t b[1];
         i = i2c->readI2CBlockData(0x00, &b[0], 1);
         LogExcess(VB_PLUGIN, "   read2 %d   %X\n", i, (int)b[0]);
+        if (!(b[0] & 0x80)) {
+            LogWarn(VB_PLUGIN, "Failed sending command: %X\n", cmd);
+            return false;
+        }
     }
-    return false;
+    return true;
 }
 
 

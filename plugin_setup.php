@@ -67,7 +67,7 @@ At Stop, the hardware is reset. Listeners will hear static.</p>
 <p>Power (88-115, 116-120<sup>*</sup>): <?php PrintSettingTextSaved("Power", 2, 0, 3, 3, "fpp-vastfmt", "110"); ?>dB&mu;V
 <br /><sup>*</sup>Can be set as high as 120dB&mu;V, but voltage accuracy above 115dB&mu;V is not guaranteed.</p>
 <p>Preemphasis: <?php PrintSettingSelect("Preemphasis", "Preemphasis", 2, 0, "75us", Array("50&mu;s (Europe, Australia, Japan)"=>"50us", "75&mu;s (USA, default)"=>"75us"), "fpp-vastfmt", ""); ?></p>
-<p>Antenna Tuning Capacitor (0=Auto, 1-191): <?php PrintSettingText("AntCap", 2, 0, 3, 3, "fpp-vastfmt", "0"); ?> * 0.25pF </p>
+<p>Antenna Tuning Capacitor (0=Auto, 1-191): <?php PrintSettingTextSaved("AntCap", 2, 0, 3, 3, "fpp-vastfmt", "0"); ?> * 0.25pF </p>
 </fieldset>
 </div>
 

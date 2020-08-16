@@ -1,10 +1,8 @@
-#include <cstring>
+#include "fpp-pch.h"
 #include <sys/time.h>
 
 #include "Si4713.h"
 #include "util/I2CUtils.h"
-
-#include "log.h"
 #include "bitstream.h"
 
 
@@ -180,8 +178,7 @@ void Si4713::setRDSBuffer(const std::string &station,
     lastRDS = station;
     uint8_t buf[64];
     memset(buf, ' ', 64);
-    
-    
+        
     int sl = station.size();
     if (sl > 64) {
         sl = 64;
@@ -197,6 +194,7 @@ void Si4713::setRDSBuffer(const std::string &station,
         }
     }
 
+    std::vector<uint8_t> resp(6);
     if (station.size() != 0) {
         int count = (sl + 3) / 4;
         //printf("%d,   %s\n", count, station.c_str());
@@ -205,8 +203,12 @@ void Si4713::setRDSBuffer(const std::string &station,
             if (i == 0) {
                 sb |= TX_RDS_BUFF_IN_MTBUFF;
             }
-            sendSi4711Command(TX_RDS_BUFF, {sb, 0x20, i, buf[i*4], buf[(i*4)+1], buf[(i*4)+2], buf[(i*4)+3], 0});
+            sendSi4711Command(TX_RDS_BUFF, {sb, 0x20, i, buf[i*4], buf[(i*4)+1], buf[(i*4)+2], buf[(i*4)+3], 0}, resp);
+            LogExcess(VB_PLUGIN, "   res:  %2X %2X %2X %2X %2X %2X\n", resp[0], resp[1], resp[2], resp[3], resp[4], resp[5]);
         }
+        uint8_t idx = count;
+        sendSi4711Command(TX_RDS_BUFF, {TX_RDS_BUFF_IN_LDBUFF, 0x20, idx, 0x0d, 0x00, 0x00, 0x00, 0}, resp);
+        LogExcess(VB_PLUGIN, "   res:  %2X %2X %2X %2X %2X %2X\n", resp[0], resp[1], resp[2], resp[3], resp[4], resp[5]);
         sendRtPlusInfo(1, titlePos, titleLen, 4, artistPos, artistLen);
     } else {
         sendSi4711Command(TX_RDS_BUFF, {TX_RDS_BUFF_IN_MTBUFF, 0, 0, 0, 0, 0, 0});
@@ -225,6 +227,7 @@ void Si4713::sendRtPlusInfo(int content1, int content1_pos, int content1_len,
                             int content2, int content2_pos, int content2_len) {
     uint8_t buff[16];
     char msg[6];
+    std::vector<uint8_t> resp(6);
 
     if (content1_len || content2_len) {
     
@@ -252,7 +255,8 @@ void Si4713::sendRtPlusInfo(int content1, int content1_pos, int content1_len,
     
         sendSi4711Command(TX_RDS_BUFF, {TX_RDS_BUFF_IN_LDBUFF,
                         RTPLUS_GROUP_ID << 4,
-                        msg[0], msg[1], msg[2], msg[3], msg[4]});
+                        msg[0], msg[1], msg[2], msg[3], msg[4]}, resp);
+        LogExcess(VB_PLUGIN, "   res+:  %2X %2X %2X %2X %2X %2X\n", resp[0], resp[1], resp[2], resp[3], resp[4], resp[5]);
 
         //send RT+ announces
         //  FmRadioController::HandleRDSData
@@ -270,7 +274,8 @@ void Si4713::sendRtPlusInfo(int content1, int content1_pos, int content1_len,
                //zzzz - for rds server needs.
             0, //template id=0
             0x4B, 0xD7 //it's RT+
-        });
+        }, resp);
+        LogExcess(VB_PLUGIN, "   res+:  %2X %2X %2X %2X %2X %2X\n", resp[0], resp[1], resp[2], resp[3], resp[4], resp[5]);
     }
 }
 
@@ -303,7 +308,7 @@ void Si4713::sendTimestamp() {
     }
     
     uint8_t sb = TX_RDS_BUFF_IN_LDBUFF | TX_RDS_BUFF_IN_FIFO;
-    std::vector<uint8_t> out;
+    std::vector<uint8_t> out(6);
     
     uint8_t arg1 = (MJD >> 15);
     uint8_t arg2 = (MJD >> 7);
@@ -311,6 +316,6 @@ void Si4713::sendTimestamp() {
     uint8_t arg4 = ((ltm->tm_hour & 0x1F)<< 4)|((ltm->tm_min & 0x3F)>> 2);
     uint8_t arg5 = ((ltm->tm_min & 0x3F)<< 6)|offset;
     sendSi4711Command(TX_RDS_BUFF,{sb, 0x40, arg1, arg2, arg3, arg4, arg5}, out);
-    //printf("ts out:  %2X %2X %2X %2X %2X %2X %2X %2X\n", out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7]);
+    LogExcess(VB_PLUGIN, "ts out:  %2X %2X %2X %2X %2X %2X\n", out[0], out[1], out[2], out[3], out[4], out[5]);
 }
 
