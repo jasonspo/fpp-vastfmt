@@ -58,11 +58,10 @@ I2CSi4713::I2CSi4713(const std::string &gpioPin) {
     }
 }
 I2CSi4713::~I2CSi4713() {
-    
     if (i2c) {
+        //sendSi4711Command(SI4710_CMD_POWER_DOWN, {});
         delete i2c;
     }
-    
 }
 
 

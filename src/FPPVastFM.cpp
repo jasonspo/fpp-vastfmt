@@ -71,7 +71,10 @@ public:
             si4713->enableAudioLimitter(settings["AudioLimitter"] == "True");
             si4713->setAudioGain(std::stoi(settings["AudioGain"]));
             si4713->setAudioCompressionThreshold(std::stoi(settings["AudioCompressionThreshold"]));
-
+            if (settings["Preemphasis"] == "50us") {
+                si4713->setEUPreemphasis();
+            }
+            
             si4713->Init();
 
             std::string rev = si4713->getRev();
@@ -96,18 +99,14 @@ public:
     void startVast() {
         if (si4713 == nullptr) {
             if (initVast()) {
-                if (settings["Preemphasis"] == "50us") {
-                    si4713->setEUPreemphasis();
-                }
-                
-                float f = std::stoi(settings["AntCap"]);
+                std::string freq = settings["Frequency"];
+                float f = std::stof(freq);
+                f *= 100;
+                si4713->setFrequency(f);
+
+                f = std::stoi(settings["AntCap"]);
                 si4713->setTXPower(std::stoi(settings["Power"]), f);
                 
-                std::string freq = settings["Frequency"];
-                f = std::stof(freq);
-                f *= 100;
-                
-                si4713->setFrequency(f);
                 si4713->setPTY(std::stoi(settings["Pty"]));
                 
                 std::string asq = si4713->getASQ();

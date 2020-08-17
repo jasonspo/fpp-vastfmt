@@ -113,7 +113,10 @@ void Si4713::setFrequency(int frequency) {
     sendSi4711Command(TX_TUNE_FREQ, {0x00, ft, fl});
 }
 void Si4713::setTXPower(int power, double antCap) {
-    uint8_t rfcap0 = antCap/0.25;
+    uint8_t rfcap0 = antCap;
+    if (rfcap0 > 191) {
+        rfcap0 = 191;
+    }
     uint8_t p = power & 0xff;
     sendSi4711Command(TX_TUNE_POWER, {0x00, 0x00, p, rfcap0});
 }
