@@ -83,6 +83,8 @@ public:
             return true;
         }
 
+        LogErr(VB_PLUGIN, "VAST-FMT: Unable to initialize si4713\n");
+
         delete si4713;
         si4713 = nullptr;
 
