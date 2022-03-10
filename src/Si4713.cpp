@@ -1,4 +1,5 @@
-#include "fpp-pch.h"
+#include <fpp-pch.h>
+
 #include <sys/time.h>
 
 #include "Si4713.h"
@@ -233,7 +234,7 @@ static int rtplus_toggle_bit = 1; //XXX:used to save RT+ toggle bit value
 void Si4713::sendRtPlusInfo(int content1, int content1_pos, int content1_len,
                             int content2, int content2_pos, int content2_len) {
     uint8_t buff[16];
-    char msg[6];
+    uint8_t msg[6];
     std::vector<uint8_t> resp(6);
 
     if (content1_len || content2_len) {

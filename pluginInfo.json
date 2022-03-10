@@ -35,8 +35,15 @@
             "sha": "8d3589395ae7615148ce7a29311408e1533ea423",
             "allowUpdates": 0
         },
-        {
+{
             "minFPPVersion": "4.0",
+            "maxFPPVersion": "5.99",
+            "branch": "master",
+            "sha": "d8e07d4552c72c07c97c973e3d4d66da7fb50bce",
+            "allowUpdates": 0
+        },
+        {
+            "minFPPVersion": "6.0",
             "maxFPPVersion": "0",
             "branch": "master",
             "sha": "",
