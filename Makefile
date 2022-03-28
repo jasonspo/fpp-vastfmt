@@ -32,7 +32,7 @@ CXXFLAGS_src/FPPVastFM.o += -I$(SRCDIR)
 %.o: %.cpp Makefile $(USBHEADERPATH)/libusb.h
 	$(CCACHE) $(CC) $(CFLAGS) $(CXXFLAGS) $(CXXFLAGS_$@) -c $< -o $@
 
-%.o: %.c Makefile
+%.o: %.c Makefile $(USBHEADERPATH)/libusb.h
 	$(CCACHE) gcc $(CFLAGS) $(CFLAGS_$@) -c $< -o $@
 
 libfpp-vastfmt.$(SHLIB_EXT): $(OBJECTS_fpp_vastfmt_so) $(SRCDIR)/libfpp.$(SHLIB_EXT)
