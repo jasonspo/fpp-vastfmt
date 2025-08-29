@@ -36,9 +36,6 @@
 
 I2CSi4713::I2CSi4713(const std::string &gpioPin) {
     resetPin = PinCapabilities::getPinByName(gpioPin).ptr();
-    if (resetPin == nullptr) {
-        resetPin = PinCapabilities::getPinByGPIO(std::stoi(gpioPin)).ptr();
-    }
     resetPin->configPin("gpio", "out");
     resetPin->setValue(1);
     std::this_thread::sleep_for(std::chrono::microseconds(200000));

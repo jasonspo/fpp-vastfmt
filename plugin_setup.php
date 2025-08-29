@@ -2,20 +2,25 @@
        
     $curGpio = ReadSettingFromFile("ResetPin", "fpp-vastfmt");
 
-    $defaultGPIO = "4";
-    if ($settings['Platform'] == "BeagleBone Black") {
-        $defaultGPIO = "99";
+    $defaultGPIO = "P1-07";
+    $defaultGPIOChip = 0;
+    if ($settings['BeaglePlatform']) {        
+        $defaultGPIO = "P9-22";
+        if (strpos($settings['SubPlatform'], 'PocketBeagle') !== false) {
+            $defaultGPIO = "P1-04";
+        }
+        $defaultGPIOChip = 3;
     }
     echo "<!-- " . $curGpio . "     " . $defaultGPIO . "  -->\n";
     $data = file_get_contents('http://127.0.0.1:32322/gpio');
     $gpiojson = json_decode($data, true);
     $gpioPins = Array();
     foreach($gpiojson as $gpio) {
-        $pn = $gpio['pin'] . ' (GPIO: ' . $gpio['gpio'] . ')';
-        $gpioPins[$pn] = $gpio['gpio'];
+        $pn = $gpio['pin'] . ' (GPIO: ' . $gpio['gpioChip'] . '/' . $gpio['gpioLine'] . ')';
+        $gpioPins[$pn] = $gpio['pin'];
         
-        if ($curGpio == $gpio['pin']) {
-            $defaultGPIO = $gpio['gpio'];
+        if ($curGpio == $gpio['pin'] || ($curGpio == $gpio["gpioLine"] && $gpio["gpioChip"] == $defaultGPIOChip)) {
+            $defaultGPIO = $gpio['pin'];
             $pluginSettings["ResetPin"] = $defaultGPIO;
             WriteSettingToFile("ResetPin", $defaultGPIO, "fpp-vastfmt");
         }

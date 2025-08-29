@@ -16,6 +16,12 @@
 #include "VASTFMT.h"
 #include "I2CSi4713.h"
 
+#if defined(PLATFORM_BBB) || defined(PLATFORM_BB64)
+#include "util/BBBUtils.h"
+constexpr int DEFAULT_GPIO = 3;
+#else 
+constexpr int DEFAULT_GPIO = 0;
+#endif
 
 static std::string padToNearest(std::string s, int l) {
     if (!s.empty()) {
@@ -64,7 +70,26 @@ public:
         }
 
         if (settings["Connection"] == "I2C") {
-            si4713 = new I2CSi4713(settings["ResetPin"]);
+            std::string pin = settings["ResetPin"];
+            if (pin.empty()) {
+#ifdef PLATFORM_PI
+                pin = "P1-07";
+#elif defined(PLATFORM_BBB) || defined(PLATFORM_BB64)
+                if (getBeagleBoneType() == BeagleBoneType::PocketBeagle) {
+                    pin = "P1_04";
+                } else {
+                    pin = "P9-22";
+                }
+                pin = "P1_04";
+#endif
+            }
+            if (pin[0] >= '0' && pin[0] <= '9') {
+                auto a = PinCapabilities::getPinByGPIO(DEFAULT_GPIO, std::atoi(pin.c_str())).ptr();
+                if (a) {
+                    pin = a->name;
+                }
+            }
+            si4713 = new I2CSi4713(pin);
         } else {
             si4713 = new VASTFMT();
         }
