@@ -28,7 +28,7 @@
 
 #define SI4713_PROP_REFCLK_FREQ   0x0201
 
-#ifdef PLATFORM_BBB
+#if defined(PLATFORM_BBB) || defined(PLATFORM_BB64)
 #define I2CBUS 2
 #else
 #define I2CBUS 1
