@@ -5,7 +5,7 @@
 	"description": "RDS/Audio support for the Vast Electronics V-FMT212R USB FM Transmitter and Si4713 I2C modules",
 	"homeURL": "https://github.com/jasonspo/fpp-vastfmt",
 	"srcURL": "https://github.com/jasonspo/fpp-vastfmt.git",
-	"bugURL": "https://github.com/jasonspo/fpp-vastfmt/fpp-vastfmt/issues",
+	"bugURL": "https://github.com/jasonspo/fpp-vastfmt/issues",
 	"versions": [
 		{
 			"minFPPVersion": "0",
