@@ -84,10 +84,13 @@ public:
 #endif
             }
             if (pin[0] >= '0' && pin[0] <= '9') {
+            #ifdef PLATFORM_BBB
                 auto a = PinCapabilities::getPinByGPIO(DEFAULT_GPIO, std::atoi(pin.c_str())).ptr();
                 if (a) {
                     pin = a->name;
                 }
+            #endif
+    // No else needed; use the pin as-is for Raspberry Pi
             }
             si4713 = new I2CSi4713(pin);
         } else {
