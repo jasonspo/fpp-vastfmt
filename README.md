@@ -1,1 +1,1 @@
-Strictly a test version in an attempt to fix the FPP VastFMT installation failures Raspberry Pi's 
+Strictly a test version in an attempt to fix the FPP VastFMT installation failures on Raspberry Pi's.  This is simply a bandaid fix for the PinCapabilities error until the great Daniel Kulp gets a working fix release.
